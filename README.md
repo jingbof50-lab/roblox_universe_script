@@ -1,2 +1,0 @@
-# roblox_universe_script
-roblox_script_cheat

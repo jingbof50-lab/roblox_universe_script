@@ -1,19 +1,49 @@
--- 1. 获取本地玩家与鼠标
+-- 1. 获取必要服务与本地玩家（确保脚本为 LocalScript）
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse() -- 获取玩家鼠标
+local player = Players.LocalPlayer
+local teleportTool = nil -- 用于记录工具，防止重复创建
 
--- 2. 获取当前工具（脚本需放在工具内，才能正确获取）
-local ClickTeleportTool = script.Parent
+-- 2. 脚本运行时自动执行：创建并给玩家传送工具
+local function createTeleportTool()
+	-- 防止重复创建工具
+	if teleportTool then return end
 
--- 3. 监听工具“点击激活”事件（玩家点击鼠标时触发）
-ClickTeleportTool.Activated:Connect(function()
-	-- 安全判断：确保玩家已加载角色，且角色有“HumanoidRootPart”（传送核心部件）
-	local Character = LocalPlayer.Character
-	if not Character then return end -- 角色未加载则退出
-	local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
-	if not HumanoidRootPart then return end -- 没有核心部件则退出
+	-- 创建工具实例
+	teleportTool = Instance.new("Tool")
+	teleportTool.Name = "传送工具"
+	teleportTool.RequiresHandle = false -- 无需工具模型（可自行添加）
+	teleportTool.Parent = player.Backpack -- 放入玩家背包
 
-	-- 4. 传送逻辑：将角色传送到鼠标点击的世界位置
-	HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position)
-end)
+	-- 角色重生时，将工具重新放回背包（避免重生后工具消失）
+	player.CharacterAdded:Connect(function()
+		if teleportTool then
+			teleportTool.Parent = player.Backpack
+		end
+	end)
+
+	-- 3. 补全工具点击传送功能
+	teleportTool.Activated:Connect(function()
+		local mouse = player:GetMouse()
+		local targetPos = mouse.Hit.Position -- 鼠标点击的世界位置
+		local character = player.Character
+
+		-- 安全判断：确保角色和核心传送部件存在
+		if not character then return end
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		if not humanoidRootPart then return end
+
+		-- 执行传送：将角色核心部件移动到目标位置
+		humanoidRootPart.CFrame = CFrame.new(targetPos)
+	end)
+end
+
+-- 4. 脚本启动时立即执行创建工具函数
+createTeleportTool()
+
+-- 额外保障：若玩家角色已加载，直接创建工具；未加载则等角色加载后创建
+if player.Character then
+	createTeleportTool()
+else
+	player.CharacterAdded:Wait()
+	createTeleportTool()
+end

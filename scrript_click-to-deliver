@@ -1,0 +1,19 @@
+-- 1. 获取本地玩家与鼠标
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse() -- 获取玩家鼠标
+
+-- 2. 获取当前工具（脚本需放在工具内，才能正确获取）
+local ClickTeleportTool = script.Parent
+
+-- 3. 监听工具“点击激活”事件（玩家点击鼠标时触发）
+ClickTeleportTool.Activated:Connect(function()
+	-- 安全判断：确保玩家已加载角色，且角色有“HumanoidRootPart”（传送核心部件）
+	local Character = LocalPlayer.Character
+	if not Character then return end -- 角色未加载则退出
+	local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+	if not HumanoidRootPart then return end -- 没有核心部件则退出
+
+	-- 4. 传送逻辑：将角色传送到鼠标点击的世界位置
+	HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position)
+end)

@@ -1,0 +1,223 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+
+-- 全局状态变量（用于重生后保留）
+local isAutoRotating = false
+local rotateSpeed = 5
+local autoRotateConnection = nil
+
+-- 创建ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CosmicCenterUI"
+screenGui.Parent = playerGui
+
+-- 菜单开关按钮（修复首次拖动偏移，白色背景适配）
+local centerButton = Instance.new("TextButton")
+centerButton.Name = "CenterButton"
+centerButton.Text = "自動旋轉"
+centerButton.Size = UDim2.new(0, 60, 0, 40)  
+centerButton.Position = UDim2.new(0.5, -30, 0.9, 0) -- 精准居中（宽度60，Offset=-30）
+centerButton.BackgroundColor3 = Color3.new(1, 1, 1) -- 白色背景
+centerButton.TextColor3 = Color3.new(0, 0, 0) -- 黑色文字
+centerButton.BorderColor3 = Color3.new(0.5, 0.5, 0.5) -- 灰色边框
+centerButton.Font = Enum.Font.Gotham
+centerButton.TextSize = 16
+centerButton.Parent = screenGui
+
+-- 按钮拖动逻辑（修复首次偏移：用AbsolutePosition计算实际屏幕位置）
+local isDraggingBtn = false
+local dragOffsetBtn = Vector2.new()
+centerButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingBtn = true
+		local mousePos = input.Position -- 鼠标屏幕位置（像素）
+		-- 用按钮绝对屏幕位置算偏移，避免坐标误差
+		dragOffsetBtn = Vector2.new(mousePos.X - centerButton.AbsolutePosition.X, mousePos.Y - centerButton.AbsolutePosition.Y)
+	end
+end)
+uis.InputChanged:Connect(function(input)
+	if isDraggingBtn and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local mousePos = input.Position
+		centerButton.Position = UDim2.new(0, mousePos.X - dragOffsetBtn.X, 0, mousePos.Y - dragOffsetBtn.Y)
+	end
+end)
+centerButton.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingBtn = false
+	end
+end)
+
+-- 菜单框架（白色背景，无标题，高度适配底部摧毁按钮）
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "MenuFrame"
+menuFrame.Visible = false
+menuFrame.Size = UDim2.new(0, 150, 0, 150) -- 适当增加高度，确保摧毁按钮在底部不拥挤
+menuFrame.Position = UDim2.new(0.5, -75, 0.5, -110) -- 居中适配新高度
+menuFrame.BackgroundColor3 = Color3.new(1, 1, 1) -- 白色背景
+menuFrame.BorderSizePixel = 2
+menuFrame.BorderColor3 = Color3.new(0.5, 0.5, 0.5) -- 灰色边框
+menuFrame.Parent = screenGui
+
+-- 可滑动容器（无标题，占满菜单）
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Name = "ScrollFrame"
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+scrollFrame.Parent = menuFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.FillDirection = Enum.FillDirection.Vertical
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+listLayout.Padding = UDim.new(0, 15) -- 统一间距，确保元素分布均匀
+listLayout.Parent = scrollFrame
+
+-- 1. 自动旋转功能开关（最上方）
+local autoRotateToggle = Instance.new("TextButton")
+autoRotateToggle.Name = "AutoRotateToggle"
+autoRotateToggle.Text = "自動旋轉: 關閉"
+autoRotateToggle.Size = UDim2.new(0.9, 0, 0, 40)
+autoRotateToggle.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9) -- 浅灰背景
+autoRotateToggle.TextColor3 = Color3.new(0, 0, 0) -- 黑色文字
+autoRotateToggle.BorderColor3 = Color3.new(0.5, 0.5, 0.5)
+autoRotateToggle.Font = Enum.Font.Gotham
+autoRotateToggle.TextSize = 16
+autoRotateToggle.Parent = scrollFrame
+
+-- 2. 自动旋转速度控制区域（中间）
+local rotateSpeedFrame = Instance.new("Frame")
+rotateSpeedFrame.Size = UDim2.new(0.9, 0, 0, 60)
+rotateSpeedFrame.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9) -- 浅灰背景
+rotateSpeedFrame.BorderColor3 = Color3.new(0.5, 0.5, 0.5)
+rotateSpeedFrame.BorderSizePixel = 1
+rotateSpeedFrame.Parent = scrollFrame
+
+local rotateSpeedLabel = Instance.new("TextLabel")
+rotateSpeedLabel.Name = "RotateSpeedLabel"
+rotateSpeedLabel.Text = "旋轉速度: " .. rotateSpeed
+rotateSpeedLabel.Size = UDim2.new(1, 0, 0.5, 0)
+rotateSpeedLabel.Position = UDim2.new(0, 0, 0, 0)
+rotateSpeedLabel.BackgroundTransparency = 1
+rotateSpeedLabel.TextColor3 = Color3.new(0, 0, 0) -- 黑色文字
+rotateSpeedLabel.TextSize = 16
+rotateSpeedLabel.Parent = rotateSpeedFrame
+
+local rotateSpeedControlFrame = Instance.new("Frame")
+rotateSpeedControlFrame.Size = UDim2.new(1, 0, 0.5, 0)
+rotateSpeedControlFrame.Position = UDim2.new(0, 0, 0.5, 0)
+rotateSpeedControlFrame.BackgroundTransparency = 1
+rotateSpeedControlFrame.Parent = rotateSpeedFrame
+
+local rotateSpeedUp = Instance.new("TextButton")
+rotateSpeedUp.Name = "RotateSpeedUp"
+rotateSpeedUp.Text = "+"
+rotateSpeedUp.Size = UDim2.new(0.3, 0, 1, 0)
+rotateSpeedUp.Position = UDim2.new(0.7, 0, 0, 0)
+rotateSpeedUp.BackgroundColor3 = Color3.new(0.8, 0.8, 0.8)
+rotateSpeedUp.TextColor3 = Color3.new(0, 0, 0)
+rotateSpeedUp.BorderColor3 = Color3.new(0.5, 0.5, 0.5)
+rotateSpeedUp.Font = Enum.Font.Gotham
+rotateSpeedUp.TextSize = 20
+rotateSpeedUp.Parent = rotateSpeedControlFrame
+
+local rotateSpeedDown = Instance.new("TextButton")
+rotateSpeedDown.Name = "RotateSpeedDown"
+rotateSpeedDown.Text = "-"
+rotateSpeedDown.Size = UDim2.new(0.3, 0, 1, 0)
+rotateSpeedDown.Position = UDim2.new(0, 0, 0, 0)
+rotateSpeedDown.BackgroundColor3 = Color3.new(0.8, 0.8, 0.8)
+rotateSpeedDown.TextColor3 = Color3.new(0, 0, 0)
+rotateSpeedDown.BorderColor3 = Color3.new(0.5, 0.5, 0.5)
+rotateSpeedDown.Font = Enum.Font.Gotham
+rotateSpeedDown.TextSize = 20
+rotateSpeedDown.Parent = rotateSpeedControlFrame
+
+-- 3. 摧毁UI按钮（最下方，通过列表布局顺序确保在底部）
+local destroyUIBtn = Instance.new("TextButton")
+destroyUIBtn.Name = "DestroyUIBtn"
+destroyUIBtn.Text = "摧毀UI"
+destroyUIBtn.Size = UDim2.new(0.9, 0, 0, 40)
+destroyUIBtn.BackgroundColor3 = Color3.new(1, 0.3, 0.3) -- 浅红警示色
+destroyUIBtn.TextColor3 = Color3.new(1, 1, 1) -- 白色文字（对比明显）
+destroyUIBtn.BorderColor3 = Color3.new(0.8, 0.2, 0.2) -- 深红边框
+destroyUIBtn.Font = Enum.Font.Gotham
+destroyUIBtn.TextSize = 16
+destroyUIBtn.Parent = scrollFrame -- 最后添加到列表，确保在最下方
+
+-- 菜单显示/隐藏逻辑
+centerButton.MouseButton1Click:Connect(function()
+	menuFrame.Visible = not menuFrame.Visible
+end)
+
+-- 自动旋转速度调整逻辑
+rotateSpeedUp.MouseButton1Click:Connect(function()
+	rotateSpeed = math.min(rotateSpeed + 10, 1000)
+	rotateSpeedLabel.Text = "旋轉速度: " .. rotateSpeed
+end)
+rotateSpeedDown.MouseButton1Click:Connect(function()
+	rotateSpeed = math.max(rotateSpeed - 10, 1)
+	rotateSpeedLabel.Text = "旋轉速度: " .. rotateSpeed
+end)
+
+-- 自动旋转核心逻辑（独立函数，方便重生调用）
+local function startAutoRotate(character)
+	if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+	if autoRotateConnection then autoRotateConnection:Disconnect() end
+
+	autoRotateConnection = runService.RenderStepped:Connect(function()
+		if not isAutoRotating then return end
+		local rootPart = character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+			rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(rotateSpeed), 0)
+		end
+	end)
+end
+
+-- 自动旋转开关逻辑
+autoRotateToggle.MouseButton1Click:Connect(function()
+	isAutoRotating = not isAutoRotating
+	autoRotateToggle.Text = "自動旋轉: " .. (isAutoRotating and "開啟" or "關閉")
+
+	-- 立即生效（当前角色）
+	local character = player.Character
+	if isAutoRotating and character then
+		startAutoRotate(character)
+	elseif autoRotateConnection then
+		autoRotateConnection:Disconnect()
+		autoRotateConnection = nil
+	end
+end)
+
+-- 摧毁UI按钮功能（彻底删除所有UI+断开旋转连接）
+destroyUIBtn.MouseButton1Click:Connect(function()
+	screenGui:Destroy() -- 删除整个UI容器
+	if autoRotateConnection then
+		autoRotateConnection:Disconnect() -- 避免内存泄漏
+		autoRotateConnection = nil
+	end
+end)
+
+-- 角色重生处理（保留自动旋转状态和速度，不重置）
+player.CharacterAdded:Connect(function(newCharacter)
+	-- 等待角色核心部件加载
+	local humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+	local humanoid = newCharacter:WaitForChild("Humanoid")
+
+	-- 重生后自动恢复旋转（如果之前开启）
+	if isAutoRotating then
+		startAutoRotate(newCharacter)
+		autoRotateToggle.Text = "自動旋轉: 開啟" -- 同步按钮文字
+	elseif autoRotateConnection then
+		autoRotateConnection:Disconnect()
+		autoRotateConnection = nil
+	end
+
+	-- 保持速度显示同步
+	rotateSpeedLabel.Text = "旋轉速度: " .. rotateSpeed
+end)

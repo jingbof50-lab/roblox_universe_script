@@ -1,0 +1,53 @@
+-- 保留的Orionlib 框架結構（已修正錯誤）
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scripting_framework"))()
+
+local Window = OrionLib:MakeWindow({
+	IntroText = "宇宙", -- 加載動畫
+	Name = "宇宙" .. identifyexecutor(), -- 腳本名字
+	HidePremium = false,
+	SaveConfig = true,
+	ConfigFolder = "OrionConfig_宇宙" -- 配置文件夾，避免保存錯誤
+})
+
+-- 顯示Tab頁面
+local Tab = Window:MakeTab({
+	Name = "功能",
+	Icon = "rbxassetid://7733779610",
+	PremiumOnly = false
+})
+
+-- 修正後的按鈕代碼
+Tab:AddButton({
+	Name = "飛行", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "飛行" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_flight"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--獲得點擊傳送工具
+Tab:AddButton({
+	Name = "傳送工具", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "傳送工具" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--動作
+Tab:AddButton({
+	Name = "動作跳舞菜單(R15)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "動作跳舞菜單(R15)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_actions"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--自動旋轉
+Tab:AddButton({
+	Name = "自動旋轉", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "自動旋轉" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_auto-rotation"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})

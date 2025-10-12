@@ -1,19 +1,12 @@
--- 保留的Orionlib 框架結構（已修正錯誤）
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scripting_framework"))()
+-- 等待玩家加载完成
+local player = game.Players.LocalPlayer
+player:WaitForChild("PlayerGui") -- 确保界面相关资源加载
 
-local Window = OrionLib:MakeWindow({
-	IntroText = "宇宙", -- 加載動畫
-	Name = "宇宙" .. identifyexecutor(), -- 腳本名字
-	HidePremium = false,
-	SaveConfig = true,
-	ConfigFolder = "OrionConfig_宇宙" -- 配置文件夾，避免保存錯誤
-})
-
--- 顯示Tab頁面
-local Tab = Window:MakeTab({
-	Name = "首頁",
-	Icon = "rbxassetid://7733779610",
-	PremiumOnly = false
+-- 显示弹窗提示（标题为"提示"，内容为"你好"）
+game.StarterGui:SetCore("SendNotification", {
+	Title = "作者 快手號:4708518336",
+	Text = "",
+	Duration = 5 -- 弹窗显示时间（秒），可不写，默认自动消失
 })
 
 -- 保留的Orionlib 框架結構（已修正錯誤）
@@ -39,7 +32,7 @@ Tab:AddButton({
 	Name = "作者 快手號:4708518336", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
 		getgenv().XiaoPi = "作者 快手號:4708518336" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		 -- 修正：移除多餘引號，確保鏈接完整
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_simple"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })
 
@@ -73,7 +66,7 @@ Tab:AddButton({
 	Name = "動作跳舞菜單(R15)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
 		getgenv().XiaoPi = "動作跳舞菜單(R15)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_actions"))() -- 修正：移除多餘引號，確保鏈接完整
+		lloadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_action_menu"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })
 

@@ -1,0 +1,652 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local uis = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+
+-- 创建ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CosmicCenterUI"
+screenGui.Parent = playerGui
+
+-- 「宇宙中心」按钮（可拖动，粗糙感）
+local centerButton = Instance.new("TextButton")
+centerButton.Name = "CenterButton"
+centerButton.Text = "打開/關閉"
+centerButton.Size = UDim2.new(0, 100, 0, 40)  
+centerButton.Position = UDim2.new(0.5, -60, 0.9, 0)  
+centerButton.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+centerButton.TextColor3 = Color3.new(1, 1, 1)
+centerButton.Font = Enum.Font.Gotham
+centerButton.TextSize = 16
+centerButton.Parent = screenGui
+
+-- 按钮拖动逻辑
+local isDraggingBtn = false
+local dragOffsetBtn = Vector2.new()
+centerButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingBtn = true
+		local mousePos = input.Position
+		dragOffsetBtn = Vector2.new(mousePos.X - centerButton.Position.X.Offset, mousePos.Y - centerButton.Position.Y.Offset)
+	end
+end)
+uis.InputChanged:Connect(function(input)
+	if isDraggingBtn and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local mousePos = input.Position
+		centerButton.Position = UDim2.new(0, mousePos.X - dragOffsetBtn.X, 0, mousePos.Y - dragOffsetBtn.Y)
+	end
+end)
+centerButton.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingBtn = false
+	end
+end)
+
+-- 菜单框架（缩小+可滑动，粗糙感）
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "MenuFrame"
+menuFrame.Visible = false
+menuFrame.Size = UDim2.new(0, 250, 0, 300) -- 微调高度适配新增功能
+menuFrame.Position = UDim2.new(0.5, -150, 0.1, 0)
+menuFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+menuFrame.BorderSizePixel = 2
+menuFrame.BorderColor3 = Color3.new(0, 0, 0)
+menuFrame.Parent = screenGui
+
+-- 菜单标题
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Text = "簡單腳本"
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextSize = 24
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = menuFrame
+
+-- 菜单拖动逻辑（标题栏拖动）
+local isDraggingMenu = false
+local dragOffsetMenu = Vector2.new()
+titleLabel.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingMenu = true
+		local mousePos = input.Position
+		dragOffsetMenu = Vector2.new(mousePos.X - menuFrame.Position.X.Offset, mousePos.Y - menuFrame.Position.Y.Offset)
+	end
+end)
+uis.InputChanged:Connect(function(input)
+	if isDraggingMenu and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local mousePos = input.Position
+		menuFrame.Position = UDim2.new(0, mousePos.X - dragOffsetMenu.X, 0, mousePos.Y - dragOffsetMenu.Y)
+	end
+end)
+titleLabel.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingMenu = false
+	end
+end)
+
+-- 可滑动的按钮容器
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Name = "ScrollFrame"
+scrollFrame.Size = UDim2.new(1, 0, 1, -40)
+scrollFrame.Position = UDim2.new(0, 0, 0, 40)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+scrollFrame.Parent = menuFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.FillDirection = Enum.FillDirection.Vertical
+listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+listLayout.Padding = UDim.new(0, 15)
+listLayout.Parent = scrollFrame
+
+-- 1. 移动速度调整区域
+local speedFrame = Instance.new("Frame")
+speedFrame.Size = UDim2.new(0.9, 0, 0, 60)
+speedFrame.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+speedFrame.Parent = scrollFrame
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Name = "SpeedLabel"
+speedLabel.Text = "移动速度: 16"
+speedLabel.Size = UDim2.new(1, 0, 0.5, 0)
+speedLabel.Position = UDim2.new(0, 0, 0, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.new(1, 1, 1)
+speedLabel.TextSize = 16
+speedLabel.Parent = speedFrame
+
+local speedControlFrame = Instance.new("Frame")
+speedControlFrame.Size = UDim2.new(1, 0, 0.5, 0)
+speedControlFrame.Position = UDim2.new(0, 0, 0.5, 0)
+speedControlFrame.BackgroundTransparency = 1
+speedControlFrame.Parent = speedFrame
+
+local speedUp = Instance.new("TextButton")
+speedUp.Name = "SpeedUp"
+speedUp.Text = "+"
+speedUp.Size = UDim2.new(0.3, 0, 1, 0)
+speedUp.Position = UDim2.new(0.7, 0, 0, 0)
+speedUp.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+speedUp.TextColor3 = Color3.new(1, 1, 1)
+speedUp.Font = Enum.Font.Gotham
+speedUp.TextSize = 20
+speedUp.Parent = speedControlFrame
+
+local speedDown = Instance.new("TextButton")
+speedDown.Name = "SpeedDown"
+speedDown.Text = "-"
+speedDown.Size = UDim2.new(0.3, 0, 1, 0)
+speedDown.Position = UDim2.new(0, 0, 0, 0)
+speedDown.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+speedDown.TextColor3 = Color3.new(1, 1, 1)
+speedDown.Font = Enum.Font.Gotham
+speedDown.TextSize = 20
+speedDown.Parent = speedControlFrame
+
+-- 2. 跳跃高度调整区域
+local jumpFrame = Instance.new("Frame")
+jumpFrame.Size = UDim2.new(0.9, 0, 0, 60)
+jumpFrame.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+jumpFrame.Parent = scrollFrame
+
+local jumpPowerLabel = Instance.new("TextLabel")
+jumpPowerLabel.Name = "JumpPowerLabel"
+jumpPowerLabel.Text = "跳跃高度: 50"
+jumpPowerLabel.Size = UDim2.new(1, 0, 0.5, 0)
+jumpPowerLabel.Position = UDim2.new(0, 0, 0, 0)
+jumpPowerLabel.BackgroundTransparency = 1
+jumpPowerLabel.TextColor3 = Color3.new(1, 1, 1)
+jumpPowerLabel.TextSize = 16
+jumpPowerLabel.Parent = jumpFrame
+
+local jumpControlFrame = Instance.new("Frame")
+jumpControlFrame.Size = UDim2.new(1, 0, 0.5, 0)
+jumpControlFrame.Position = UDim2.new(0, 0, 0.5, 0)
+jumpControlFrame.BackgroundTransparency = 1
+jumpControlFrame.Parent = jumpFrame
+
+local jumpUp = Instance.new("TextButton")
+jumpUp.Name = "JumpUp"
+jumpUp.Text = "+"
+jumpUp.Size = UDim2.new(0.3, 0, 1, 0)
+jumpUp.Position = UDim2.new(0.7, 0, 0, 0)
+jumpUp.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+jumpUp.TextColor3 = Color3.new(1, 1, 1)
+jumpUp.Font = Enum.Font.Gotham
+jumpUp.TextSize = 20
+jumpUp.Parent = jumpControlFrame
+
+local jumpDown = Instance.new("TextButton")
+jumpDown.Name = "JumpDown"
+jumpDown.Text = "-"
+jumpDown.Size = UDim2.new(0.3, 0, 1, 0)
+jumpDown.Position = UDim2.new(0, 0, 0, 0)
+jumpDown.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+jumpDown.TextColor3 = Color3.new(1, 1, 1)
+jumpDown.Font = Enum.Font.Gotham
+jumpDown.TextSize = 20
+jumpDown.Parent = jumpControlFrame
+
+-- 3. 点击传送工具按钮
+local teleportToolButton = Instance.new("TextButton")
+teleportToolButton.Name = "TeleportToolButton"
+teleportToolButton.Text = "获取传送工具"
+teleportToolButton.Size = UDim2.new(0.9, 0, 0, 40)
+teleportToolButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+teleportToolButton.TextColor3 = Color3.new(1, 1, 1)
+teleportToolButton.Font = Enum.Font.Gotham
+teleportToolButton.TextSize = 16
+teleportToolButton.Parent = scrollFrame
+
+-- 4. 穿墙功能开关
+local noclipToggle = Instance.new("TextButton")
+noclipToggle.Name = "NoclipToggle"
+noclipToggle.Text = "穿墙: 关闭"
+noclipToggle.Size = UDim2.new(0.9, 0, 0, 40)
+noclipToggle.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+noclipToggle.TextColor3 = Color3.new(1, 1, 1)
+noclipToggle.Font = Enum.Font.Gotham
+noclipToggle.TextSize = 16
+noclipToggle.Parent = scrollFrame
+
+-- 5. 透视功能开关
+local xrayToggle = Instance.new("TextButton")
+xrayToggle.Name = "XrayToggle"
+xrayToggle.Text = "透视: 关闭"
+xrayToggle.Size = UDim2.new(0.9, 0, 0, 40)
+xrayToggle.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+xrayToggle.TextColor3 = Color3.new(1, 1, 1)
+xrayToggle.Font = Enum.Font.Gotham
+xrayToggle.TextSize = 16
+xrayToggle.Parent = scrollFrame
+
+-- 6. 飞行功能区域
+local flyFrame = Instance.new("Frame")
+flyFrame.Size = UDim2.new(0.9, 0, 0, 80)
+flyFrame.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+flyFrame.Parent = scrollFrame
+
+local flyLabel = Instance.new("TextLabel")
+flyLabel.Name = "FlyLabel"
+flyLabel.Text = "飞行控制"
+flyLabel.Size = UDim2.new(1, 0, 0.3, 0)
+flyLabel.Position = UDim2.new(0, 0, 0, 0)
+flyLabel.BackgroundTransparency = 1
+flyLabel.TextColor3 = Color3.new(1, 1, 1)
+flyLabel.TextSize = 16
+flyLabel.Parent = flyFrame
+
+local flyToggle = Instance.new("TextButton")
+flyToggle.Name = "FlyToggle"
+flyToggle.Text = "飞行: 关闭"
+flyToggle.Size = UDim2.new(0.45, 0, 0, 30)
+flyToggle.Position = UDim2.new(0, 0, 0.35, 0)
+flyToggle.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+flyToggle.TextColor3 = Color3.new(1, 1, 1)
+flyToggle.Font = Enum.Font.Gotham
+flyToggle.TextSize = 16
+flyToggle.Parent = flyFrame
+
+local flySpeedFrame = Instance.new("Frame")
+flySpeedFrame.Size = UDim2.new(0.45, 0, 0, 30)
+flySpeedFrame.Position = UDim2.new(0.55, 0, 0.35, 0)
+flySpeedFrame.BackgroundTransparency = 1
+flySpeedFrame.Parent = flyFrame
+
+local flySpeedLabel = Instance.new("TextLabel")
+flySpeedLabel.Name = "FlySpeedLabel"
+flySpeedLabel.Text = "飞行速度: 20"
+flySpeedLabel.Size = UDim2.new(0.6, 0, 1, 0)
+flySpeedLabel.Position = UDim2.new(0, 0, 0, 0)
+flySpeedLabel.BackgroundTransparency = 1
+flySpeedLabel.TextColor3 = Color3.new(1, 1, 1)
+flySpeedLabel.TextSize = 14
+flySpeedLabel.Parent = flySpeedFrame
+
+local flySpeedUp = Instance.new("TextButton")
+flySpeedUp.Name = "FlySpeedUp"
+flySpeedUp.Text = "+"
+flySpeedUp.Size = UDim2.new(0.2, 0, 1, 0)
+flySpeedUp.Position = UDim2.new(0.7, 0, 0, 0)
+flySpeedUp.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+flySpeedUp.TextColor3 = Color3.new(1, 1, 1)
+flySpeedUp.Font = Enum.Font.Gotham
+flySpeedUp.TextSize = 16
+flySpeedUp.Parent = flySpeedFrame
+
+local flySpeedDown = Instance.new("TextButton")
+flySpeedDown.Name = "FlySpeedDown"
+flySpeedDown.Text = "-"
+flySpeedDown.Size = UDim2.new(0.2, 0, 1, 0)
+flySpeedDown.Position = UDim2.new(0.5, 0, 0, 0)
+flySpeedDown.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+flySpeedDown.TextColor3 = Color3.new(1, 1, 1)
+flySpeedDown.Font = Enum.Font.Gotham
+flySpeedDown.TextSize = 16
+flySpeedDown.Parent = flySpeedFrame
+
+-- 7. 自动旋转功能（新增速度调整）
+local autoRotateToggle = Instance.new("TextButton")
+autoRotateToggle.Name = "AutoRotateToggle"
+autoRotateToggle.Text = "自动旋转: 关闭"
+autoRotateToggle.Size = UDim2.new(0.9, 0, 0, 40)
+autoRotateToggle.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+autoRotateToggle.TextColor3 = Color3.new(1, 1, 1)
+autoRotateToggle.Font = Enum.Font.Gotham
+autoRotateToggle.TextSize = 16
+autoRotateToggle.Parent = scrollFrame
+
+-- 自动旋转速度控制区域
+local rotateSpeedFrame = Instance.new("Frame")
+rotateSpeedFrame.Size = UDim2.new(0.9, 0, 0, 60)
+rotateSpeedFrame.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+rotateSpeedFrame.Parent = scrollFrame
+
+local rotateSpeedLabel = Instance.new("TextLabel")
+rotateSpeedLabel.Name = "RotateSpeedLabel"
+rotateSpeedLabel.Text = "旋转速度: 5"
+rotateSpeedLabel.Size = UDim2.new(1, 0, 0.5, 0)
+rotateSpeedLabel.Position = UDim2.new(0, 0, 0, 0)
+rotateSpeedLabel.BackgroundTransparency = 1
+rotateSpeedLabel.TextColor3 = Color3.new(1, 1, 1)
+rotateSpeedLabel.TextSize = 16
+rotateSpeedLabel.Parent = rotateSpeedFrame
+
+local rotateSpeedControlFrame = Instance.new("Frame")
+rotateSpeedControlFrame.Size = UDim2.new(1, 0, 0.5, 0)
+rotateSpeedControlFrame.Position = UDim2.new(0, 0, 0.5, 0)
+rotateSpeedControlFrame.BackgroundTransparency = 1
+rotateSpeedControlFrame.Parent = rotateSpeedFrame
+
+local rotateSpeedUp = Instance.new("TextButton")
+rotateSpeedUp.Name = "RotateSpeedUp"
+rotateSpeedUp.Text = "+"
+rotateSpeedUp.Size = UDim2.new(0.3, 0, 1, 0)
+rotateSpeedUp.Position = UDim2.new(0.7, 0, 0, 0)
+rotateSpeedUp.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+rotateSpeedUp.TextColor3 = Color3.new(1, 1, 1)
+rotateSpeedUp.Font = Enum.Font.Gotham
+rotateSpeedUp.TextSize = 20
+rotateSpeedUp.Parent = rotateSpeedControlFrame
+
+local rotateSpeedDown = Instance.new("TextButton")
+rotateSpeedDown.Name = "RotateSpeedDown"
+rotateSpeedDown.Text = "-"
+rotateSpeedDown.Size = UDim2.new(0.3, 0, 1, 0)
+rotateSpeedDown.Position = UDim2.new(0, 0, 0, 0)
+rotateSpeedDown.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+rotateSpeedDown.TextColor3 = Color3.new(1, 1, 1)
+rotateSpeedDown.Font = Enum.Font.Gotham
+rotateSpeedDown.TextSize = 20
+rotateSpeedDown.Parent = rotateSpeedControlFrame
+
+-- 菜单显示/隐藏逻辑
+local isMenuOpen = false
+centerButton.MouseButton1Click:Connect(function()
+	isMenuOpen = not isMenuOpen
+	menuFrame.Visible = isMenuOpen
+end)
+
+-- 1. 移动速度逻辑
+local walkSpeed = 16
+speedUp.MouseButton1Click:Connect(function()
+	walkSpeed = math.min(walkSpeed + 5, 1000)
+	speedLabel.Text = "移动速度: " .. walkSpeed
+	local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = walkSpeed
+	end
+end)
+speedDown.MouseButton1Click:Connect(function()
+	walkSpeed = math.max(walkSpeed - 5, 10)
+	speedLabel.Text = "移动速度: " .. walkSpeed
+	local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.WalkSpeed = walkSpeed
+	end
+end)
+
+-- 2. 跳跃高度逻辑
+local jumpPower = 50
+jumpUp.MouseButton1Click:Connect(function()
+	jumpPower = math.min(jumpPower + 10, 200)
+	jumpPowerLabel.Text = "跳跃高度: " .. jumpPower
+	local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.JumpPower = jumpPower
+	end
+end)
+jumpDown.MouseButton1Click:Connect(function()
+	jumpPower = math.max(jumpPower - 10, 50)
+	jumpPowerLabel.Text = "跳跃高度: " .. jumpPower
+	local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+	if humanoid then
+		humanoid.JumpPower = jumpPower
+	end
+end)
+
+-- 3. 点击传送工具逻辑
+local teleportTool = nil
+teleportToolButton.MouseButton1Click:Connect(function()
+	if teleportTool then return end
+	teleportTool = Instance.new("Tool")
+	teleportTool.Name = "传送工具"
+	teleportTool.RequiresHandle = false
+	teleportTool.Parent = player.Backpack
+	player.CharacterAdded:Connect(function(character)
+		if teleportTool then
+			teleportTool.Parent = player.Backpack
+		end
+	end)
+	teleportTool.Activated:Connect(function()
+		local mouse = player:GetMouse()
+		local targetPos = mouse.Hit.Position
+		local character = player.Character
+		if character then
+			character:SetPrimaryPartCFrame(CFrame.new(targetPos + Vector3.new(0, 5, 0)))
+		end
+	end)
+	teleportToolButton.Text = "传送工具已获取"
+	wait(3)
+	teleportToolButton.Text = "获取传送工具"
+end)
+
+-- 4. 穿墙功能逻辑
+local isNoclip = false
+local noclipConnection = nil
+noclipToggle.MouseButton1Click:Connect(function()
+	isNoclip = not isNoclip
+	noclipToggle.Text = "穿墙: " .. (isNoclip and "开启" or "关闭")
+
+	if isNoclip then
+		-- 开启穿墙：实时设置角色所有部件碰撞为false
+		noclipConnection = runService.RenderStepped:Connect(function()
+			local character = player.Character
+			if not character then return end
+			for _, part in pairs(character:GetChildren()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
+		end)
+	else
+		-- 关闭穿墙：恢复碰撞
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+		local character = player.Character
+		if character then
+			for _, part in pairs(character:GetChildren()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = true
+				end
+			end
+		end
+	end
+end)
+
+-- 5. 透视功能逻辑（透明+边框）
+local isXray = false
+local xrayParts = {} -- 存储部件原始状态（透明度+材质）
+xrayToggle.MouseButton1Click:Connect(function()
+	isXray = not isXray
+	xrayToggle.Text = "透视: " .. (isXray and "开启" or "关闭")
+
+	if isXray then
+		-- 开启透视：遍历所有方块，设为全透明+玻璃材质（保留边框）
+		for _, part in pairs(workspace:GetDescendants()) do
+			if part:IsA("BasePart") and not part:IsDescendantOf(player.Character) then
+				-- 排除角色自身部件
+				xrayParts[part] = {
+					OriginalTransparency = part.Transparency,
+					OriginalMaterial = part.Material
+				}
+				part.Transparency = 1 -- 全透明
+				part.Material = Enum.Material.Glass -- 玻璃材质保留边框
+			end
+		end
+		-- 监听新生成的部件
+		workspace.DescendantAdded:Connect(function(part)
+			if isXray and part:IsA("BasePart") and not part:IsDescendantOf(player.Character) then
+				xrayParts[part] = {
+					OriginalTransparency = part.Transparency,
+					OriginalMaterial = part.Material
+				}
+				part.Transparency = 1
+				part.Material = Enum.Material.Glass
+			end
+		end)
+	else
+		-- 关闭透视：恢复所有部件原始状态
+		for part, state in pairs(xrayParts) do
+			if part and part.Parent then
+				part.Transparency = state.OriginalTransparency
+				part.Material = state.OriginalMaterial
+			end
+		end
+		xrayParts = {}
+	end
+end)
+
+-- 6. 飞行功能逻辑（适配手机原移动摇杆）
+local isFlying = false
+local flySpeed = 20
+local originalWalkSpeed, originalJumpPower
+local flyConnection = nil
+
+flyToggle.MouseButton1Click:Connect(function()
+	isFlying = not isFlying
+	flyToggle.Text = "飞行: " .. (isFlying and "开启" or "关闭")
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+
+	if isFlying then
+		originalWalkSpeed = humanoid.WalkSpeed
+		originalJumpPower = humanoid.JumpPower
+		humanoid.WalkSpeed = 0
+		humanoid.JumpPower = 0
+
+		if flyConnection then
+			flyConnection:Disconnect()
+		end
+		flyConnection = runService.RenderStepped:Connect(function()
+			if isFlying and character:FindFirstChild("HumanoidRootPart") then
+				local rootPart = character.HumanoidRootPart
+				rootPart.Velocity = Vector3.new(0, 0, 0) -- 重置速度
+
+				-- 移动逻辑：手机用原移动摇杆，PC用WASD
+				local moveDir = Vector3.new(0, 0, 0)
+				local moveVector = humanoid.MoveDirection -- 原移动摇杆方向
+				if moveVector.Magnitude > 0 then
+					moveDir = moveVector * flySpeed
+				end
+
+				-- 垂直移动：PC按空格/左Shift
+				if uis:IsKeyDown(Enum.KeyCode.Space) then
+					moveDir = moveDir + Vector3.new(0, flySpeed * 0.5, 0)
+				elseif uis:IsKeyDown(Enum.KeyCode.LeftShift) then
+					moveDir = moveDir + Vector3.new(0, -flySpeed * 0.5, 0)
+				end
+
+				rootPart.Velocity = moveDir
+			end
+		end)
+	else
+		if flyConnection then
+			flyConnection:Disconnect()
+			flyConnection = nil
+		end
+		humanoid.WalkSpeed = originalWalkSpeed or 16
+		humanoid.JumpPower = originalJumpPower or 50
+	end
+end)
+
+-- 飞行速度逻辑
+flySpeedUp.MouseButton1Click:Connect(function()
+	flySpeed = math.min(flySpeed + 10, 100)
+	flySpeedLabel.Text = "飞行速度: " .. flySpeed
+end)
+flySpeedDown.MouseButton1Click:Connect(function()
+	flySpeed = math.max(flySpeed - 10, 10)
+	flySpeedLabel.Text = "飞行速度: " .. flySpeed
+end)
+
+-- 7. 自动旋转逻辑（新增速度调整）
+local isAutoRotating = false
+local autoRotateConnection = nil
+local rotateSpeed = 5 -- 初始旋转速度
+
+rotateSpeedUp.MouseButton1Click:Connect(function()
+	rotateSpeed = math.min(rotateSpeed + 10, 1000)
+	rotateSpeedLabel.Text = "旋转速度: " .. rotateSpeed
+end)
+
+rotateSpeedDown.MouseButton1Click:Connect(function()
+	rotateSpeed = math.max(rotateSpeed - 10, 1)
+	rotateSpeedLabel.Text = "旋转速度: " .. rotateSpeed
+end)
+
+autoRotateToggle.MouseButton1Click:Connect(function()
+	isAutoRotating = not isAutoRotating
+	autoRotateToggle.Text = "自动旋转: " .. (isAutoRotating and "开启" or "关闭")
+	if isAutoRotating then
+		if autoRotateConnection then
+			autoRotateConnection:Disconnect()
+		end
+		autoRotateConnection = runService.RenderStepped:Connect(function()
+			local character = player.Character
+			if character and character:FindFirstChild("HumanoidRootPart") and isAutoRotating then
+				local rootPart = character.HumanoidRootPart
+				rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(rotateSpeed), 0)
+			end
+		end)
+	else
+		if autoRotateConnection then
+			autoRotateConnection:Disconnect()
+			autoRotateConnection = nil
+		end
+	end
+end)
+
+-- 角色重生处理（确保重生后脚本继续运行）
+player.CharacterAdded:Connect(function(newCharacter)
+	local humanoid = newCharacter:WaitForChild("Humanoid")
+
+	-- 重置飞行状态
+	isFlying = false
+	if flyConnection then
+		flyConnection:Disconnect()
+		flyConnection = nil
+	end
+	if originalWalkSpeed then
+		humanoid.WalkSpeed = originalWalkSpeed
+		originalWalkSpeed = nil
+	end
+	if originalJumpPower then
+		humanoid.JumpPower = originalJumpPower
+		originalJumpPower = nil
+	end
+
+	-- 重置穿墙状态
+	isNoclip = false
+	if noclipConnection then
+		noclipConnection:Disconnect()
+		noclipConnection = nil
+	end
+	noclipToggle.Text = "穿墙: 关闭"
+	-- 恢复新角色碰撞
+	for _, part in pairs(newCharacter:GetChildren()) do
+		if part:IsA("BasePart") then
+			part.CanCollide = true
+		end
+	end
+
+	-- 重置透视状态
+	isXray = false
+	for part, state in pairs(xrayParts) do
+		if part and part.Parent then
+			part.Transparency = state.OriginalTransparency
+			part.Material = state.OriginalMaterial
+		end
+	end
+	xrayParts = {}
+	xrayToggle.Text = "透视: 关闭"
+
+	-- 重置自动旋转
+	isAutoRotating = false
+	if autoRotateConnection then
+		autoRotateConnection:Disconnect()
+		autoRotateConnection = nil
+	end
+	autoRotateToggle.Text = "自动旋转: 关闭"
+	rotateSpeed = 5
+	rotateSpeedLabel.Text = "旋转速度: 5"
+end)
+

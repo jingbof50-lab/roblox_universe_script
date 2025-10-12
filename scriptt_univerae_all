@@ -11,6 +11,40 @@ local Window = OrionLib:MakeWindow({
 
 -- 顯示Tab頁面
 local Tab = Window:MakeTab({
+	Name = "首頁",
+	Icon = "rbxassetid://7733779610",
+	PremiumOnly = false
+})
+
+-- 保留的Orionlib 框架結構（已修正錯誤）
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scripting_framework"))()
+
+local Window = OrionLib:MakeWindow({
+	IntroText = "宇宙", -- 加載動畫
+	Name = "宇宙" .. identifyexecutor(), -- 腳本名字
+	HidePremium = false,
+	SaveConfig = true,
+	ConfigFolder = "OrionConfig_宇宙" -- 配置文件夾，避免保存錯誤
+})
+
+-- 顯示Tab頁面
+local Tab = Window:MakeTab({
+	Name = "首頁",
+	Icon = "rbxassetid://4458855809",
+	PremiumOnly = false
+})
+
+--作者 快手號:4708518336
+Tab:AddButton({
+	Name = "作者 快手號:4708518336", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "作者 快手號:4708518336" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		 -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+-- 顯示Tab頁面
+local Tab = Window:MakeTab({
 	Name = "功能",
 	Icon = "rbxassetid://7733779610",
 	PremiumOnly = false
@@ -58,5 +92,14 @@ Tab:AddButton({
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
 		getgenv().XiaoPi = "飛行(超人動畫)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_superman_flight"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--甩飛腳本
+Tab:AddButton({
+	Name = "甩飛腳本(肘擊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "甩飛腳本（肘擊" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FE-hammer-28636"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })

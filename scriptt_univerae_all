@@ -92,7 +92,16 @@ Tab:AddButton({
 Tab:AddButton({
 	Name = "甩飛腳本(肘擊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "甩飛腳本（肘擊" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FE-hammer-28636"))() -- 修正：移除多餘引號，確保鏈接完整
+		getgenv().XiaoPi = "甩飛腳本（肘擊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_throw_away"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--dex腳本
+Tab:AddButton({
+	Name = "dex(修改器)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "dex(修改器)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })

@@ -4,8 +4,8 @@ player:WaitForChild("PlayerGui") -- 确保界面相关资源加载
 
 -- 显示弹窗提示（标题为"提示"，内容为"你好"）
 game.StarterGui:SetCore("SendNotification", {
-	Title = "作者 快手號:4708518336",
-	Text = "",
+	Title = "歡迎使用",
+	Text = "作者 快手號:4708518336",
 	Duration = 5 -- 弹窗显示时间（秒），可不写，默认自动消失
 })
 
@@ -61,6 +61,15 @@ Tab:AddButton({
 	end -- 修正：補充end閉合Callback函數
 })
 
+--破壞之錘
+Tab:AddButton({
+	Name = "破壞之錘(可以破壞地圖入面的方塊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "破壞之錘(可以破壞地圖入面的方塊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
 --動作
 Tab:AddButton({
 	Name = "動作跳舞菜單(R15)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
@@ -103,5 +112,14 @@ Tab:AddButton({
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
 		getgenv().XiaoPi = "dex(修改器)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--透視菜單
+Tab:AddButton({
+	Name = "透視菜單", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "透視菜單" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })

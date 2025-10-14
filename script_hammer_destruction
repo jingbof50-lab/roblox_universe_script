@@ -1,0 +1,53 @@
+-- 基础服务与玩家引用
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+character:WaitForChild("HumanoidRootPart") -- 等待角色加载完成
+
+-- 创建可装备的工具
+local function createTool()
+    -- 工具本体
+    local unanchorTool = Instance.new("Tool")
+    unanchorTool.Name = "UnanchorTool"
+    unanchorTool.RequiresHandle = true -- 工具必须有Handle才能装备
+    unanchorTool.Parent = player.Backpack -- 放入背包
+
+    -- 工具手柄（可见部分）
+    local handle = Instance.new("Part")
+    handle.Name = "Handle"
+    handle.Size = Vector3.new(1, 1, 1)
+    handle.BrickColor = BrickColor.Blue()
+    handle.Anchored = false
+    handle.CanCollide = false
+    handle.Parent = unanchorTool
+
+    -- 装备工具时启用点击功能
+    local isEquipped = false
+    unanchorTool.Equipped:Connect(function()
+        isEquipped = true
+    end)
+
+    -- 卸下工具时禁用点击功能
+    unanchorTool.Unequipped:Connect(function()
+        isEquipped = false
+    end)
+
+    -- 鼠标点击逻辑（仅装备时生效）
+    player:GetMouse().Button1Down:Connect(function()
+        if not isEquipped then return end -- 未装备则不执行
+
+        local target = player:GetMouse().Target
+        -- 仅处理非角色自身的部件
+        if target and target:IsA("BasePart") and not target:IsDescendantOf(character) then
+            target.Anchored = false -- 取消锚定
+        end
+    end)
+end
+
+-- 生成工具 + 角色重生时重新生成
+createTool()
+character:WaitForChild("Humanoid").Died:Connect(function()
+    player.CharacterAdded:Wait()
+    character = player.Character
+    createTool()
+end)

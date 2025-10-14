@@ -1,0 +1,259 @@
+-- 1. 核心服务与对象加载（确保不遗漏）
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- 2. 状态管理（新增菜单显示/隐藏状态）
+local state = {
+    isPerspectiveOn = false,
+    isLineOn = false,
+    isBoxOn = false,
+    isNameOn = false,
+    isMenuVisible = true -- 控制菜单显示/隐藏
+}
+local tempAssets = {
+    perspectiveParts = {},
+    lines = {},
+    boxes = {},
+    nameTags = {},
+    showBtn = nil, -- 存储召唤按钮，方便控制
+    mainFrame = nil -- 新增：存储菜单主体，方便重生后控制显隐
+}
+
+-- 3. 创建菜单UI（关键修改：ScreenGui设置ResetOnSpawn=false）
+local function createMenu()
+    -- 检查是否已存在UI，避免重复创建（防止异常情况）
+    local existingGui = playerGui:FindFirstChild("CosmicPerspectiveMenu")
+    if existingGui then return end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "CosmicPerspectiveMenu"
+    screenGui.Parent = playerGui
+    -- 核心设置：角色死亡重生时，UI不被重置/销毁
+    screenGui.ResetOnSpawn = false 
+    tempAssets.screenGui = screenGui -- 存入临时资源，方便后续操作
+
+    -- 菜单主体（300x400，控制Visible属性实现隐藏）
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainMenu"
+    mainFrame.Size = UDim2.new(0, 300, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    mainFrame.BorderSizePixel = 1
+    mainFrame.Visible = state.isMenuVisible -- 绑定显示状态
+    mainFrame.Parent = screenGui
+    tempAssets.mainFrame = mainFrame -- 记录菜单主体，重生后保持显隐状态
+
+    -- 标题栏（300x40）
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 300, 0, 40)
+    title.BackgroundColor3 = Color3.fromRGB(240,235,225)
+    title.Text = "宇宙-透視"
+    title.TextColor3 = Color3.fromRGB(0,0,0)
+    title.TextScaled = true
+    title.Parent = mainFrame
+
+    -- 【新增】隐藏按钮（菜单右上角，"-"符号）
+    local hideBtn = Instance.new("TextButton")
+    hideBtn.Name = "HideBtn"
+    hideBtn.Size = UDim2.new(0, 30, 0, 30)
+    hideBtn.Position = UDim2.new(1, -35, 0, 5) -- 右上角偏移
+    hideBtn.BackgroundColor3 = Color3.fromRGB(220,220,220)
+    hideBtn.Text = "-" -- 隐藏符号
+    hideBtn.TextColor3 = Color3.fromRGB(0,0,0)
+    hideBtn.TextScaled = true
+    hideBtn.Parent = mainFrame
+    -- 隐藏按钮逻辑：隐藏菜单，显示召唤按钮
+    hideBtn.MouseButton1Click:Connect(function()
+        state.isMenuVisible = false
+        mainFrame.Visible = false
+        tempAssets.showBtn.Visible = true
+    end)
+
+    -- 【新增】召唤按钮（屏幕左上角，"+"符号，默认隐藏）
+    local showBtn = Instance.new("TextButton")
+    showBtn.Name = "ShowBtn"
+    showBtn.Size = UDim2.new(0, 40, 0, 40)
+    showBtn.Position = UDim2.new(0, 10, 0, 10) -- 左上角位置
+    showBtn.BackgroundColor3 = Color3.fromRGB(240,235,225) -- 与标题栏同色
+    showBtn.Text = "+" -- 召唤符号
+    showBtn.TextColor3 = Color3.fromRGB(0,0,0)
+    showBtn.TextScaled = true
+    showBtn.Visible = false -- 默认隐藏
+    showBtn.Parent = screenGui
+    tempAssets.showBtn = showBtn -- 存入临时资源，方便后续控制
+    -- 召唤按钮逻辑：显示菜单，隐藏召唤按钮
+    showBtn.MouseButton1Click:Connect(function()
+        state.isMenuVisible = true
+        mainFrame.Visible = true
+        showBtn.Visible = false
+    end)
+
+    -- 按钮生成工具（原有逻辑不变）
+    local function createBtn(text, yPos)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 260, 0, 40)
+        btn.Position = UDim2.new(0, 20, 0, yPos)
+        btn.BackgroundColor3 = Color3.fromRGB(220,220,220)
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(0,0,0)
+        btn.TextScaled = true
+        btn.Parent = mainFrame
+        return btn
+    end
+
+    -- 4个功能按钮（原有逻辑不变）
+    local btnPerspective = createBtn("打開透視或關閉", 60)
+    local btnLine = createBtn("追中線", 120)
+    local btnBox = createBtn("玩家框選", 180)
+    local btnName = createBtn("名字", 240)
+
+    -- 5. 透视功能（原有逻辑不变）
+    btnPerspective.MouseButton1Click:Connect(function()
+        state.isPerspectiveOn = not state.isPerspectiveOn
+        if state.isPerspectiveOn then
+            for _, part in ipairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") and not part:IsDescendantOf(character) then
+                    tempAssets.perspectiveParts[part] = part.Transparency
+                    part.Transparency = 0.5
+                end
+            end
+        else
+            for part, origTrans in pairs(tempAssets.perspectiveParts) do
+                if part and part:IsA("BasePart") then
+                    part.Transparency = origTrans
+                end
+            end
+            tempAssets.perspectiveParts = {}
+        end
+    end)
+
+    -- 6. 追中線功能（原有逻辑不变，重生后重新绑定Adornee）
+    local function updateLines()
+        for _, line in ipairs(tempAssets.lines) do line:Destroy() end
+        tempAssets.lines = {}
+        if not state.isLineOn or not rootPart then return end
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    local line = Instance.new("LineHandleAdornment")
+                    line.Adornee = rootPart -- 重生后绑定新的rootPart
+                    line.From = Vector3.new(0,0,0)
+                    line.To = otherRoot.Position - rootPart.Position
+                    line.Color3 = Color3.fromRGB(255,0,0)
+                    line.Thickness = 2
+                    line.Parent = rootPart
+                    table.insert(tempAssets.lines, line)
+                end
+            end
+        end
+    end
+    btnLine.MouseButton1Click:Connect(function()
+        state.isLineOn = not state.isLineOn
+        updateLines()
+        if state.isLineOn then
+            -- 若已有循环，先断开避免重复
+            if tempAssets.lineLoop then tempAssets.lineLoop:Disconnect() end
+            tempAssets.lineLoop = RunService.RenderStepped:Connect(updateLines)
+        else
+            if tempAssets.lineLoop then tempAssets.lineLoop:Disconnect() end
+        end
+    end)
+
+    -- 7. 玩家框选功能（原有逻辑不变）
+    local function updateBoxes()
+        for _, box in ipairs(tempAssets.boxes) do box:Destroy() end
+        tempAssets.boxes = {}
+        if not state.isBoxOn then return end
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local otherChar = otherPlayer.Character
+                local otherRoot = otherChar:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    local box = Instance.new("BoxHandleAdornment")
+                    box.Adornee = otherRoot
+                    box.Size = otherChar:GetExtentsSize() + Vector3.new(0.2,0.2,0.2)
+                    box.Color3 = Color3.fromRGB(0,0,255)
+                    box.Transparency = 0.5
+                    box.Parent = otherChar
+                    table.insert(tempAssets.boxes, box)
+                end
+            end
+        end
+    end
+    btnBox.MouseButton1Click:Connect(function()
+        state.isBoxOn = not state.isBoxOn
+        updateBoxes()
+        if state.isBoxOn then
+            if tempAssets.boxLoop then tempAssets.boxLoop:Disconnect() end
+            tempAssets.boxLoop = RunService.RenderStepped:Connect(updateBoxes)
+        else
+            if tempAssets.boxLoop then tempAssets.boxLoop:Disconnect() end
+        end
+    end)
+
+    -- 8. 名字显示功能（原有逻辑不变）
+    local function updateNames()
+        for _, tag in ipairs(tempAssets.nameTags) do tag:Destroy() end
+        tempAssets.nameTags = {}
+        if not state.isNameOn then return end
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local otherRoot = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if otherRoot then
+                    local nameGui = Instance.new("BillboardGui")
+                    nameGui.Size = UDim2.new(0,150,0,30)
+                    nameGui.StudsOffset = Vector3.new(0,2,0)
+                    nameGui.AlwaysOnTop = true
+                    nameGui.Parent = otherRoot
+
+                    local nameLabel = Instance.new("TextLabel")
+                    nameLabel.Size = UDim2.new(1,0,1,0)
+                    nameLabel.BackgroundTransparency = 1
+                    nameLabel.Text = otherPlayer.Name
+                    nameLabel.TextColor3 = Color3.fromRGB(0,0,0)
+                    nameLabel.TextScaled = true
+                    nameLabel.Parent = nameGui
+
+                    table.insert(tempAssets.nameTags, nameGui)
+                end
+            end
+        end
+    end
+    btnName.MouseButton1Click:Connect(function()
+        state.isNameOn = not state.isNameOn
+        updateNames()
+        if state.isNameOn then
+            if tempAssets.playerAdded then tempAssets.playerAdded:Disconnect() end
+            if tempAssets.playerRemoving then tempAssets.playerRemoving:Disconnect() end
+            tempAssets.playerAdded = Players.PlayerAdded:Connect(updateNames)
+            tempAssets.playerRemoving = Players.PlayerRemoving:Connect(updateNames)
+        else
+            if tempAssets.playerAdded then tempAssets.playerAdded:Disconnect() end
+            if tempAssets.playerRemoving then tempAssets.playerRemoving:Disconnect() end
+        end
+    end)
+end
+
+-- 9. 初始化与角色重生适配（关键：重生后恢复UI显隐状态和功能）
+createMenu()
+player.CharacterAdded:Connect(function(newChar)
+    -- 重新绑定角色和根部件
+    character = newChar
+    rootPart = newChar:WaitForChild("HumanoidRootPart")
+
+    -- 恢复菜单显隐状态（避免重生后菜单强制显示）
+    if tempAssets.mainFrame then
+        tempAssets.mainFrame.Visible = state.isMenuVisible
+    end
+
+    -- 恢复已开启的功能
+    if state.isLineOn then updateLines() end
+    if state.isBoxOn then updateBoxes() end
+    if state.isNameOn then updateNames() end
+    -- 透视功能无需额外恢复（方块透明度已修改，重生不影响）
+end)

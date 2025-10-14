@@ -8,7 +8,7 @@ character:WaitForChild("HumanoidRootPart") -- 等待角色加载完成
 local function createTool()
     -- 工具本体
     local unanchorTool = Instance.new("Tool")
-    unanchorTool.Name = "UnanchorTool"
+    unanchorTool.Name = "破壞之錘"
     unanchorTool.RequiresHandle = true -- 工具必须有Handle才能装备
     unanchorTool.Parent = player.Backpack -- 放入背包
 

@@ -52,24 +52,6 @@ Tab:AddButton({
 	end -- 修正：補充end閉合Callback函數
 })
 
---獲得點擊傳送工具
-Tab:AddButton({
-	Name = "傳送工具", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "傳送工具" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---破壞之錘
-Tab:AddButton({
-	Name = "破壞之錘(可以破壞地圖入面的方塊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "破壞之錘(可以破壞地圖入面的方塊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
 --動作
 Tab:AddButton({
 	Name = "動作跳舞菜單(R15)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
@@ -121,5 +103,39 @@ Tab:AddButton({
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
 		getgenv().XiaoPi = "透視菜單" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+-- 顯示Tab頁面
+local Tab = Window:MakeTab({
+	Name = "武器獲得",
+	Icon = "rbxassetid://7825183411",
+	PremiumOnly = false
+})
+
+--獲得點擊傳送工具
+Tab:AddButton({
+	Name = "傳送工具", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "傳送工具" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--破壞之錘
+Tab:AddButton({
+	Name = "破壞之錘(可以破壞地圖的方塊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "破壞之錘(可以破壞地圖的方塊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--火箭筒
+Tab:AddButton({
+	Name = "火箭筒", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "火箭筒" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_bazooka"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })

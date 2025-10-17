@@ -18,7 +18,7 @@ local ROCKET_MESH_ID = "http://www.roblox.com/asset/?id=2251534" -- 火箭模型
 -- 3. 自动生成本地火箭筒工具（仅自己能看到）
 local function createLocalRocketLauncher()
     local RocketTool = Instance.new("Tool")
-    RocketTool.Name = "LocalRocketLauncher"
+    RocketTool.Name = "火箭筒"
     RocketTool.ToolTip = "本地火箭筒（仅你可见）"
     RocketTool.Parent = LocalBackpack
     RocketTool.Enabled = true -- 初始可用

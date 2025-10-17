@@ -1,0 +1,181 @@
+-- 1. 本地核心对象（只关联当前玩家）
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer -- 仅本地玩家
+local LocalMouse = LocalPlayer:GetMouse() -- 本地鼠标
+local LocalCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local LocalBackpack = LocalPlayer.Backpack -- 本地背包
+local GRAVITY = Workspace.Gravity -- 重力参数
+
+-- 2. 常量配置（可自定义）
+local RELOAD_TIME = 3 -- 换弹冷却（秒）
+local ROCKET_SPEED = 80 -- 火箭速度
+local EXPLOSION_RANGE = 5 -- 爆炸范围（ studs）
+local MOUSE_ICON = "rbxasset://textures/GunCursor.png" -- 正常鼠标图标
+local RELOAD_ICON = "rbxasset://textures/GunWaitCursor.png" -- 冷却图标
+local ROCKET_MESH_ID = "http://www.roblox.com/asset/?id=2251534" -- 火箭模型
+
+-- 3. 自动生成本地火箭筒工具（仅自己能看到）
+local function createLocalRocketLauncher()
+    local RocketTool = Instance.new("Tool")
+    RocketTool.Name = "LocalRocketLauncher"
+    RocketTool.ToolTip = "本地火箭筒（仅你可见）"
+    RocketTool.Parent = LocalBackpack
+    RocketTool.Enabled = true -- 初始可用
+
+    local Handle = Instance.new("Part")
+    Handle.Name = "Handle"
+    Handle.Size = Vector3.new(2, 1, 3) -- 火箭筒大小
+    Handle.BrickColor = BrickColor.New("Dark gray")
+    Handle.Anchored = false
+    Handle.CanCollide = false
+    Handle.Parent = RocketTool
+
+    local SwooshSound = Instance.new("Sound")
+    SwooshSound.Name = "Swoosh"
+    SwooshSound.SoundId = "rbxassetid://154966922" -- 飞行音效
+    SwooshSound.Volume = 0.5
+    SwooshSound.Parent = Handle
+
+    local BoomSound = Instance.new("Sound")
+    BoomSound.Name = "Boom"
+    BoomSound.SoundId = "rbxassetid://154966608" -- 爆炸音效
+    BoomSound.Volume = 0.8
+    BoomSound.Parent = Handle
+
+    -- 装备时绑定到右手
+    RocketTool.Equipped:Connect(function()
+        local RightHand = LocalCharacter:WaitForChild("RightHand")
+        local Weld = Instance.new("WeldConstraint")
+        Weld.Part0 = RightHand
+        Weld.Part1 = Handle
+        Weld.C0 = CFrame.new(0.5, 0, -1) * CFrame.Angles(math.rad(90), 0, math.rad(45))
+        Weld.Parent = RightHand
+        updateMouseIcon()
+    end)
+
+    -- 卸下时解绑
+    RocketTool.Unequipped:Connect(function()
+        local Weld = LocalCharacter:FindFirstChild("WeldConstraint", true)
+        if Weld then Weld:Destroy() end
+        LocalMouse.Icon = ""
+    end)
+
+    return RocketTool, Handle, SwooshSound, BoomSound
+end
+
+-- 4. 预创建本地火箭模板
+local function createLocalRocketTemplate()
+    local Rocket = Instance.new("Part")
+    Rocket.Name = "LocalRocket"
+    Rocket.Size = Vector3.new(1.2, 1.2, 3.27)
+    Rocket.CanCollide = false -- 关闭火箭自身碰撞，避免卡壳
+    Rocket.Anchored = false
+    Rocket.BrickColor = BrickColor.New("Neon orange")
+
+    local Mesh = Instance.new("SpecialMesh", Rocket)
+    Mesh.MeshId = ROCKET_MESH_ID
+    Mesh.Scale = Vector3.new(0.35, 0.35, 0.25)
+
+    local Fire = Instance.new("Fire", Rocket)
+    Fire.Heat = 8
+    Fire.Size = 3
+
+    local AntiGravity = Instance.new("BodyForce", Rocket)
+    AntiGravity.Force = Vector3.new(0, Rocket:GetMass() * GRAVITY, 0)
+
+    return Rocket
+end
+
+-- 5. 鼠标图标更新
+local function updateMouseIcon()
+    local RocketTool = LocalBackpack:FindFirstChild("LocalRocketLauncher")
+    if not (LocalMouse and RocketTool) then return end
+    LocalMouse.Icon = RocketTool.Enabled and MOUSE_ICON or RELOAD_ICON
+end
+
+-- 6. 本地爆炸逻辑
+local function localExplosion(rocketPos, BoomSound)
+    local BoomClone = BoomSound:Clone()
+    BoomClone.Position = rocketPos
+    BoomClone.Parent = Workspace
+    BoomClone:Play()
+    task.delay(2, function() BoomClone:Destroy() end)
+
+    -- 爆炸范围删除逻辑（保留原功能）
+    local nearbyParts = Workspace:GetPartsInRadius(rocketPos, EXPLOSION_RANGE)
+    for _, part in ipairs(nearbyParts) do
+        if not part:IsDescendantOf(LocalCharacter) and part.Name ~= "Handle" then
+            part:Destroy()
+        end
+    end
+end
+
+-- 7. 本地发射火箭逻辑（核心修改处）
+local function fireLocalRocket(RocketTool, Handle, SwooshSound, BoomSound, RocketTemplate)
+    local Humanoid = LocalCharacter:FindFirstChildOfClass("Humanoid")
+    if not (RocketTool.Enabled and Humanoid and Humanoid.Health > 0) then return end
+
+    RocketTool.Enabled = false
+    updateMouseIcon()
+
+    local targetPos = LocalMouse.Hit.Position
+    if not targetPos then return end
+
+    local RocketClone = RocketTemplate:Clone()
+    local spawnPos = (Handle.CFrame * CFrame.new(6, 0, 0)).Position
+    RocketClone.CFrame = CFrame.new(spawnPos, targetPos)
+    RocketClone.Parent = Workspace
+
+    RocketClone.Velocity = RocketClone.CFrame.LookVector * ROCKET_SPEED
+    local SwooshClone = SwooshSound:Clone()
+    SwooshClone.Parent = RocketClone
+    SwooshClone:Play()
+
+    -- 核心修改：火箭触碰方块时直接删除该方块
+    RocketClone.Touched:Connect(function(hit)
+        -- 过滤自身角色，避免删除自己的部件
+        if hit:IsDescendantOf(LocalCharacter) then return end
+        -- 判断触碰的是“方块”（Part类型，若需指定名称可加 hit.Name == "方块名"）
+        if hit:IsA("Part") then
+            hit:Destroy() -- 直接删除碰到的方块
+        end
+        -- 保留原爆炸逻辑（触碰后仍触发爆炸）
+        localExplosion(RocketClone.Position, BoomSound)
+        RocketClone:Destroy()
+    end)
+
+    -- 超时清理火箭
+    task.delay(10, function()
+        if RocketClone:IsDescendantOf(Workspace) then
+            RocketClone:Destroy()
+        end
+    end)
+
+    -- 冷却结束恢复
+    task.delay(RELOAD_TIME, function()
+        RocketTool.Enabled = true
+        updateMouseIcon()
+    end)
+end
+
+-- 8. 初始化脚本
+local function initLocalRocketLauncher()
+    local RocketTool, Handle, SwooshSound, BoomSound = createLocalRocketLauncher()
+    local RocketTemplate = createLocalRocketTemplate()
+
+    RocketTool.Activated:Connect(function()
+        fireLocalRocket(RocketTool, Handle, SwooshSound, BoomSound, RocketTemplate)
+    end)
+
+    RocketTool.Changed:Connect(function(property)
+        if property == "Enabled" then
+            updateMouseIcon()
+        end
+    end)
+
+    print("本地火箭筒已就绪！按I键打开背包装备，点击左键发射～")
+end
+
+-- 9. 启动脚本
+initLocalRocketLauncher()

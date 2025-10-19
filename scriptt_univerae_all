@@ -149,10 +149,19 @@ Tab:AddButton({
 
 --物體控制菜單
 Tab:AddButton({
-	Name = "物體控制菜單", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Name = "物體控制菜單(控制一個物體)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
 	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "物體控制菜單" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		getgenv().XiaoPi = "物體控制菜單(控制一個物體)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_object_control"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})
+
+--物體控制菜單2
+Tab:AddButton({
+	Name = "物體控制菜單(控制多個物體)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "物體控制菜單(控制多個物體)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_object_control_2"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })
 

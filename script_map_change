@@ -1,0 +1,168 @@
+-- 1. 基础变量获取
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Workspace = game:GetService("Workspace")
+
+-- 2. 创建主UI容器（ScreenGui）
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "MapEditorGui"
+MainGui.Parent = PlayerGui
+
+-- 3. 创建主菜单框架（200x300）
+local MenuFrame = Instance.new("Frame")
+MenuFrame.Name = "MenuFrame"
+MenuFrame.Size = UDim2.new(0, 200, 0, 300) -- 宽200，高300
+MenuFrame.Position = UDim2.new(0.5, -100, 0.5, -150) -- 屏幕居中
+MenuFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1) -- 深色背景（突出白色按钮）
+MenuFrame.BorderSizePixel = 2
+MenuFrame.BorderColor3 = Color3.new(1, 1, 1)
+MenuFrame.Parent = MainGui
+
+-- 4. 创建标题（200x30，内容“宇宙-地圖”）
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(0, 200, 0, 30)
+TitleLabel.Position = UDim2.new(0, 0, 0, 0) -- 菜单内最上方
+TitleLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TitleLabel.Text = "宇宙-地圖"
+TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+TitleLabel.TextScaled = true
+TitleLabel.Parent = MenuFrame
+
+-- 5. 创建输入框框架（160x50，带输入框）
+local InputFrame = Instance.new("Frame")
+InputFrame.Name = "InputFrame"
+InputFrame.Size = UDim2.new(0, 160, 0, 50)
+InputFrame.Position = UDim2.new(0, 20, 0, 40) -- 标题下方，左距20（居中）
+InputFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+InputFrame.Parent = MenuFrame
+
+-- 5.1 输入框（默认内容“8772146864”）
+local DecalIdInput = Instance.new("TextBox")
+DecalIdInput.Name = "DecalIdInput"
+DecalIdInput.Size = UDim2.new(0, 150, 0, 40)
+DecalIdInput.Position = UDim2.new(0, 5, 0, 5) -- 框架内居中
+DecalIdInput.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+DecalIdInput.Text = "8772146864" -- 默认贴图ID
+DecalIdInput.TextColor3 = Color3.new(1, 1, 1)
+DecalIdInput.ClearTextOnFocus = false -- 点击不清除默认文本
+DecalIdInput.Parent = InputFrame
+
+-- 6. 创建按钮框架（160x50，带“修改地圖”按钮）
+local ButtonFrame = Instance.new("Frame")
+ButtonFrame.Name = "ButtonFrame"
+ButtonFrame.Size = UDim2.new(0, 160, 0, 50)
+ButtonFrame.Position = UDim2.new(0, 20, 0, 100) -- 输入框框架下方，留10空隙
+ButtonFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+ButtonFrame.Parent = MenuFrame
+
+-- 6.1 “修改地圖”按钮（150x40）
+local ApplyButton = Instance.new("TextButton")
+ApplyButton.Name = "ApplyButton"
+ApplyButton.Size = UDim2.new(0, 150, 0, 40)
+ApplyButton.Position = UDim2.new(0, 5, 0, 5) -- 框架内居中
+ApplyButton.BackgroundColor3 = Color3.new(1, 1, 1) -- 按钮白色
+ApplyButton.Text = "修改地圖"
+ApplyButton.TextColor3 = Color3.new(0, 0, 0) -- 文字黑色（对比明显）
+ApplyButton.Parent = ButtonFrame
+
+-- 7. 创建隐藏按钮（控制菜单显示/隐藏）
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 80, 0, 30)
+ToggleButton.Position = UDim2.new(0.5, -40, 0.9, -15) -- 屏幕底部居中
+ToggleButton.BackgroundColor3 = Color3.new(1, 1, 1) -- 按钮白色
+ToggleButton.Text = "隐藏菜单"
+ToggleButton.TextColor3 = Color3.new(0, 0, 0)
+ToggleButton.Parent = MainGui
+
+-- 8. 核心功能：给物体添加贴图（递归处理模型）
+local function ApplyDecalToObject(object, decalId)
+    -- 处理零件（Part、WedgePart等带表面的对象）
+    if object:IsA("BasePart") then
+        -- 清除已有贴图（避免重复）
+        for _, child in ipairs(object:GetChildren()) do
+            if child:IsA("Decal") then
+                child:Destroy()
+            end
+        end
+        -- 给零件所有表面加贴图
+        local surfaces = {
+            Enum.NormalId.Front, Enum.NormalId.Back,
+            Enum.NormalId.Left, Enum.NormalId.Right,
+            Enum.NormalId.Top, Enum.NormalId.Bottom
+        }
+        for _, surface in ipairs(surfaces) do
+            local decal = Instance.new("Decal")
+            decal.Name = "MapDecal"
+            decal.Texture = "rbxassetid://" .. decalId
+            decal.Face = surface
+            decal.Parent = object
+        end
+    end
+    -- 递归处理模型内的子对象
+    if object:IsA("Model") then
+        for _, child in ipairs(object:GetChildren()) do
+            ApplyDecalToObject(child, decalId)
+        end
+    end
+    -- 处理工具（Tool内的零件）
+    if object:IsA("Tool") then
+        for _, child in ipairs(object:GetChildren()) do
+            if child:IsA("BasePart") then
+                ApplyDecalToObject(child, decalId)
+            end
+        end
+    end
+end
+
+-- 9. 按钮点击事件：执行“修改地圖”
+ApplyButton.MouseButton1Click:Connect(function()
+    local decalId = DecalIdInput.Text
+    -- 验证ID（简单判断是否为数字）
+    if not tonumber(decalId) then
+        warn("请输入有效的贴图ID！")
+        return
+    end
+    -- 1. 给Workspace所有物体加贴图（模型、零件、工具）
+    for _, object in ipairs(Workspace:GetChildren()) do
+        -- 排除玩家自己的角色（避免覆盖角色贴图，可根据需求删除此判断）
+        if not object:IsA("Model") or not object:FindFirstChildOfClass("Humanoid") then
+            ApplyDecalToObject(object, decalId)
+        end
+    end
+    -- 2. 修改天空贴图
+    local Sky = Workspace:FindFirstChildOfClass("Sky")
+    if not Sky then
+        Sky = Instance.new("Sky")
+        Sky.Parent = Workspace
+    end
+    Sky.SkyboxFt = "rbxassetid://8772146864" .. decalId
+    Sky.SkyboxBk = "rbxassetid://8772146864" .. decalId
+    Sky.SkyboxLf = "rbxassetid://8772146864" .. decalId
+    Sky.SkyboxRt = "rbxassetid://8772146864" .. decalId
+    Sky.SkyboxUp = "rbxassetid://8772146864" .. decalId
+    Sky.SkyboxDn = "rbxassetid://8772146864" .. decalId
+end)
+
+-- 10. 隐藏按钮点击事件：切换菜单显示
+ToggleButton.MouseButton1Click:Connect(function()
+    MenuFrame.Visible = not MenuFrame.Visible
+    ToggleButton.Text = MenuFrame.Visible and "隐藏菜单" or "显示菜单"
+end)
+
+-- 11. 关键功能：玩家死亡后UI仍显示
+local function OnCharacterAdded(character)
+    local Humanoid = character:WaitForChild("Humanoid")
+    -- 死亡时不隐藏UI（覆盖默认UI隐藏逻辑）
+    Humanoid.Died:Connect(function()
+        MainGui.Enabled = true -- 强制UI启用
+        MenuFrame.Visible = true -- 强制菜单显示
+    end)
+end
+
+-- 初始化角色监听（首次加载+重生）
+if Player.Character then
+    OnCharacterAdded(Player.Character)
+end
+Player.CharacterAdded:Connect(OnCharacterAdded)

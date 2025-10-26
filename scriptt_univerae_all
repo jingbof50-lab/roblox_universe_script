@@ -5,193 +5,263 @@ player:WaitForChild("PlayerGui") -- 确保界面资源加载完成
 
 -- 核心判断逻辑
 if player.Name == "1x7x1x9x1x1x9x1x6" then
-    -- 名字匹配，提示无资格并终止脚本
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "提示",
-        Text = "你没资格👎",
-        Duration = 5
-    })
-    return -- 停止运行后续所有功能代码
-else
-    -- 名字不匹配，执行核心功能代码
-    -- 显示欢迎弹窗
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "歡迎使用",
-        Text = "作者 快手號:4708518336",
-        Duration = 5
-    })
+    -- 创建密码输入窗口界面
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "PasswordGui"
+    ScreenGui.Parent = player.PlayerGui
 
-    -- OrionLib 框架结构
-    local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scripting_framework"))()
+    -- 半透明背景（聚焦窗口）
+    local Background = Instance.new("Frame")
+    Background.Size = UDim2.new(1, 0, 1, 0)
+    Background.BackgroundColor3 = Color3.new(0, 0, 0)
+    Background.BackgroundTransparency = 0.7
+    Background.Parent = ScreenGui
 
-    local Window = OrionLib:MakeWindow({
-        IntroText = "宇宙",
-        Name = "宇宙" .. identifyexecutor(),
-        HidePremium = false,
-        SaveConfig = true,
-        ConfigFolder = "OrionConfig_宇宙"
-    })
+    -- 密码窗口主体
+    local PasswordWindow = Instance.new("Frame")
+    PasswordWindow.Size = UDim2.new(0, 300, 0, 200)
+    PasswordWindow.Position = UDim2.new(0.5, -150, 0.5, -100)
+    PasswordWindow.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    PasswordWindow.BorderColor3 = Color3.new(1, 1, 1)
+    PasswordWindow.Parent = Background
 
-    -- 首页Tab
-    local Tab = Window:MakeTab({
-        Name = "首頁",
-        Icon = "rbxassetid://4458855809",
-        PremiumOnly = false
-    })
+    -- 窗口标题
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.BackgroundTransparency = 1
+    Title.Text = "请输入密码"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.TextScaled = true
+    Title.Parent = PasswordWindow
 
-    Tab:AddButton({
-        Name = "作者 快手號:4708518336",
-        Callback = function()
-            getgenv().XiaoPi = "作者 快手號:4708518336"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_simple"))()
+    -- 密码输入框
+    local PasswordBox = Instance.new("TextBox")
+    PasswordBox.Size = UDim2.new(0.8, 0, 0, 40)
+    PasswordBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+    PasswordBox.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+    PasswordBox.TextColor3 = Color3.new(1, 1, 1)
+    PasswordBox.PlaceholderText = "输入密码..."
+    PasswordBox.ClearTextOnFocus = false
+    PasswordBox.PasswordChar = "*" -- 密码隐藏显示
+    PasswordBox.TextScaled = true
+    PasswordBox.Parent = PasswordWindow
+
+    -- 提示文本（用于显示密码对错）
+    local TipText = Instance.new("TextLabel")
+    TipText.Size = UDim2.new(1, 0, 0, 20)
+    TipText.Position = UDim2.new(0, 0, 0.6, 0)
+    BackgroundTransparency = 1
+    TipText.Text = ""
+    TipText.TextColor3 = Color3.new(1, 0, 0)
+    TipText.TextScaled = true
+    TipText.Parent = PasswordWindow
+
+    -- 确认按钮
+    local ConfirmBtn = Instance.new("TextButton")
+    ConfirmBtn.Size = UDim2.new(0.4, 0, 0, 30)
+    ConfirmBtn.Position = UDim2.new(0.3, 0, 0.8, 0)
+    ConfirmBtn.BackgroundColor3 = Color3.new(0.1, 0.5, 0.1)
+    ConfirmBtn.Text = "确认"
+    ConfirmBtn.TextColor3 = Color3.new(1, 1, 1)
+    ConfirmBtn.TextScaled = true
+    ConfirmBtn.Parent = PasswordWindow
+
+    -- 密码验证逻辑
+    local correctPassword = "8848996"
+    ConfirmBtn.MouseButton1Click:Connect(function()
+        local input = PasswordBox.Text:trim() -- 去除前后空格
+        if input == correctPassword then
+            -- 密码正确，销毁窗口并执行功能代码
+            ScreenGui:Destroy()
+        else
+            -- 密码错误，显示提示
+            TipText.Text = "密码错误，请重试"
+            PasswordBox.Text = ""
         end
-    })
+    end)
 
-    -- 功能Tab
-    local Tab = Window:MakeTab({
-        Name = "功能",
-        Icon = "rbxassetid://7733779610",
-        PremiumOnly = false
-    })
-
-    Tab:AddButton({
-        Name = "飛行",
-        Callback = function()
-            getgenv().XiaoPi = "飛行"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_flight"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "自動旋轉",
-        Callback = function()
-            getgenv().XiaoPi = "自動旋轉"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_auto-rotation"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "飛行(超人動畫)",
-        Callback = function()
-            getgenv().XiaoPi = "飛行(超人動畫)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_superman_flight"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "甩飛腳本(肘擊)",
-        Callback = function()
-            getgenv().XiaoPi = "甩飛腳本（肘擊)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_throw_away"))()
-        end
-    })
-
-    -- 武器獲得Tab
-    local Tab = Window:MakeTab({
-        Name = "武器獲得",
-        Icon = "rbxassetid://7825183411",
-        PremiumOnly = false
-    })
-
-    Tab:AddButton({
-        Name = "傳送工具",
-        Callback = function()
-            getgenv().XiaoPi = "傳送工具"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "破壞之錘(可以破壞地圖的方塊)",
-        Callback = function()
-            getgenv().XiaoPi = "破壞之錘(可以破壞地圖的方塊)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "火箭筒",
-        Callback = function()
-            getgenv().XiaoPi = "火箭筒"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_bazooka"))()
-        end
-    })
-
-    -- 擴展菜單Tab
-    local Tab = Window:MakeTab({
-        Name = "擴展菜單",
-        Icon = "rbxassetid://133104953772161",
-        PremiumOnly = false
-    })
-
-    Tab:AddButton({
-        Name = "dex(修改器)",
-        Callback = function()
-            getgenv().XiaoPi = "dex(修改器)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "動作跳舞菜單(R15)",
-        Callback = function()
-            getgenv().XiaoPi = "動作跳舞菜單(R15)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_action_menu"))() -- 修正原代码"lloadstring"拼写错误
-        end
-    })
-
-    Tab:AddButton({
-        Name = "透視菜單",
-        Callback = function()
-            getgenv().XiaoPi = "透視菜單"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "物體控制菜單",
-        Callback = function()
-            getgenv().XiaoPi = "物體控制菜單"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_controlled_items"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "地圖貼圖修改",
-        Callback = function()
-            getgenv().XiaoPi = "地圖貼圖修改"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_map_change"))()
-        end
-    })
-
-    -- 最強戰場Tab
-    local Tab = Window:MakeTab({
-        Name = "最強戰場",
-        Icon = "rbxassetid://111934201357670",
-        PremiumOnly = false
-    })
-
-    Tab:AddButton({
-        Name = "特效",
-        Callback = function()
-            getgenv().XiaoPi = "特效"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI/Mua"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "五条悟(最強英雄)",
-        Callback = function()
-            getgenv().XiaoPi = "五条悟(最強英雄)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_gojo_satoru_all.lua"))()
-        end
-    })
-
-    Tab:AddButton({
-        Name = "火車頭(英雄獵人)",
-        Callback = function()
-            getgenv().XiaoPi = "火車頭(英雄獵人)"
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua"))()
-        end
-    })
+    -- 等待密码验证通过（未通过则卡在这步，不执行后续代码）
+    repeat wait() until not ScreenGui:IsDescendantOf(player.PlayerGui)
 end
+
+-- 所有玩家（包括密码验证通过的目标玩家）都会执行以下核心功能代码
+-- 显示欢迎弹窗
+game.StarterGui:SetCore("SendNotification", {
+    Title = "歡迎使用",
+    Text = "作者 快手號:4708518336",
+    Duration = 5
+})
+
+-- OrionLib 框架结构
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scripting_framework"))()
+
+local Window = OrionLib:MakeWindow({
+    IntroText = "宇宙",
+    Name = "宇宙" .. identifyexecutor(),
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionConfig_宇宙"
+})
+
+-- 首页Tab
+local Tab = Window:MakeTab({
+    Name = "首頁",
+    Icon = "rbxassetid://4458855809",
+    PremiumOnly = false
+})
+
+Tab:AddButton({
+    Name = "作者 快手號:4708518336",
+    Callback = function()
+        getgenv().XiaoPi = "作者 快手號:4708518336"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_simple"))()
+    end
+})
+
+-- 功能Tab
+local Tab = Window:MakeTab({
+    Name = "功能",
+    Icon = "rbxassetid://7733779610",
+    PremiumOnly = false
+})
+
+Tab:AddButton({
+    Name = "飛行",
+    Callback = function()
+        getgenv().XiaoPi = "飛行"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_flight"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "自動旋轉",
+    Callback = function()
+        getgenv().XiaoPi = "自動旋轉"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_auto-rotation"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "飛行(超人動畫)",
+    Callback = function()
+        getgenv().XiaoPi = "飛行(超人動畫)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_superman_flight"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "甩飛腳本(肘擊)",
+    Callback = function()
+        getgenv().XiaoPi = "甩飛腳本（肘擊)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_throw_away"))()
+    end
+})
+
+-- 武器獲得Tab
+local Tab = Window:MakeTab({
+    Name = "武器獲得",
+    Icon = "rbxassetid://7825183411",
+    PremiumOnly = false
+})
+
+Tab:AddButton({
+    Name = "傳送工具",
+    Callback = function()
+        getgenv().XiaoPi = "傳送工具"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "破壞之錘(可以破壞地圖的方塊)",
+    Callback = function()
+        getgenv().XiaoPi = "破壞之錘(可以破壞地圖的方塊)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "火箭筒",
+    Callback = function()
+        getgenv().XiaoPi = "火箭筒"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_bazooka"))()
+    end
+})
+
+-- 擴展菜單Tab
+local Tab = Window:MakeTab({
+    Name = "擴展菜單",
+    Icon = "rbxassetid://133104953772161",
+    PremiumOnly = false
+})
+
+Tab:AddButton({
+    Name = "dex(修改器)",
+    Callback = function()
+        getgenv().XiaoPi = "dex(修改器)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "動作跳舞菜單(R15)",
+    Callback = function()
+        getgenv().XiaoPi = "動作跳舞菜單(R15)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_action_menu"))() -- 修正原代码"lloadstring"拼写错误
+    end
+})
+
+Tab:AddButton({
+    Name = "透視菜單",
+    Callback = function()
+        getgenv().XiaoPi = "透視菜單"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "物體控制菜單",
+    Callback = function()
+        getgenv().XiaoPi = "物體控制菜單"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_controlled_items"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "地圖貼圖修改",
+    Callback = function()
+        getgenv().XiaoPi = "地圖貼圖修改"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_map_change"))()
+    end
+})
+
+-- 最強戰場Tab
+local Tab = Window:MakeTab({
+    Name = "最強戰場",
+    Icon = "rbxassetid://111934201357670",
+    PremiumOnly = false
+})
+
+Tab:AddButton({
+    Name = "特效",
+    Callback = function()
+        getgenv().XiaoPi = "特效"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI/Mua"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "五条悟(最強英雄)",
+    Callback = function()
+        getgenv().XiaoPi = "五条悟(最強英雄)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_gojo_satoru_all.lua"))()
+    end
+})
+
+Tab:AddButton({
+    Name = "火車頭(英雄獵人)",
+    Callback = function()
+        getgenv().XiaoPi = "火車頭(英雄獵人)"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua"))()
+    end
+})

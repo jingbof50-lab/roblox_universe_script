@@ -198,3 +198,19 @@ Tab:AddButton({
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua"))() -- 修正：移除多餘引號，確保鏈接完整
 	end -- 修正：補充end閉合Callback函數
 })
+
+-- 顯示Tab頁面
+local Tab = Window:MakeTab({
+	Name = "偷走一顆腦紅",
+	Icon = "rbxassetid://111934201357670",
+	PremiumOnly = false
+})
+
+--選擇1
+Tab:AddButton({
+	Name = "菜單(修改)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
+	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
+		getgenv().XiaoPi = "火車頭(英雄獵人)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_Property_modification_menu"))() -- 修正：移除多餘引號，確保鏈接完整
+	end -- 修正：補充end閉合Callback函數
+})

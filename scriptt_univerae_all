@@ -81,7 +81,7 @@ KeyTextBox.FocusLost:Connect(function(enterPressed)
             ExtendTab:AddButton({Name = "地圖貼圖修改", Callback = function() getgenv().XiaoPi = "地圖貼圖修改"; loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_map_change"))() end})
             -- 最強戰場Tab
             local BattleTab = Window:MakeTab({Name = "最強戰場", Icon = "rbxassetid://111934201357670", PremiumOnly = false})
-            BattleTab:AddButton({Name = "特效", Callback = function() getgenv().XiaoPi = "特效"; loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI/Mua"))() end})
+            BattleTab:AddButton({Name = "特效", Callback = function() getgenv().XiaoPi = "特效"; loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI.lua"))() end})
             BattleTab:AddButton({Name = "五条悟(最強英雄)", Callback = function() getgenv().XiaoPi = "五条悟(最強英雄)"; loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_gojo_satoru_all.lua"))() end})
             BattleTab:AddButton({Name = "五条悟2(最強英雄)", Callback = function() getgenv().XiaoPi = "五条悟2(最強英雄)"; loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/refs/heads/main/script_gojo_satoru_2.lua", true))() end})
             BattleTab:AddButton({Name = "火車頭(英雄獵人)", Callback = function() getgenv().XiaoPi = "火車頭(英雄獵人)"; loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua"))() end})

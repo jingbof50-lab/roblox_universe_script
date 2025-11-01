@@ -1,225 +1,293 @@
--- 等待玩家加载完成
-local player = game.Players.LocalPlayer
-player:WaitForChild("PlayerGui") -- 确保界面相关资源加载
+-- 引入所有公式
+-- 初始化所有变量
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local originalWalkSpeed = humanoid.WalkSpeed
 
--- 显示弹窗提示（标题为"提示"，内容为"你好"）
+-- 状态变量
+local Fu_Ling_Sik_1 = 0  -- 穿墙：0 = 开启，1 = 关闭
+local Fu_Ling_Sik_2 = 0  -- 特效：0 = 开启，1 = 关闭
+local Fu_Ling_Sik_3 = 0   -- 移动速度修改：0 = 使用自定义值，1 = 使用原值
+local Player_movement_speed_value = 100
+local Special_effects_colors = Color3.new(0.1, 0, 0)  -- 默认血黑色
+
+-- 穿墙功能
+local originalCollisionGroups = {}
+
+local function disableCollisions()
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			originalCollisionGroups[part] = part.CollisionGroup
+			part.CanCollide = false
+			part.CollisionGroup = "NoCollision"
+		end
+	end
+end
+
+local function enableCollisions()
+	for part, group in pairs(originalCollisionGroups) do
+		if part and part.Parent then
+			part.CanCollide = true
+			part.CollisionGroup = group
+		end
+	end
+	originalCollisionGroups = {}
+end
+
+-- 特效功能
+local FIRE_SIZE = 5
+
+local function addColoredFire(part, color)
+	if part:FindFirstChild("ColoredFire") then
+		part.ColoredFire:Destroy()
+	end
+	local fire = Instance.new("Fire")
+	fire.Name = "ColoredFire"
+	fire.Size = FIRE_SIZE
+	fire.Heat = 3
+	fire.Color = color
+	fire.Parent = part
+end
+
+local function addColoredFiresToCharacter(char)
+	for _, part in ipairs(char:GetChildren()) do
+		if part:IsA("BasePart") then
+			addColoredFire(part, Special_effects_colors)
+		end
+	end
+end
+
+local function removeAllColoredFires(char)
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("Fire") and part.Name == "ColoredFire" then
+			part:Destroy()
+		end
+	end
+end
+
+-- 角色重生处理
+local function onCharacterAdded(newCharacter)
+	character = newCharacter
+	humanoid = character:WaitForChild("Humanoid")
+	originalWalkSpeed = humanoid.WalkSpeed
+
+	-- 穿墙
+	if Fu_Ling_Sik_1 == 0 then
+		disableCollisions()
+	else
+		enableCollisions()
+	end
+
+	-- 特效
+	if Fu_Ling_Sik_2 == 0 then
+		addColoredFiresToCharacter(character)
+	else
+		removeAllColoredFires(character)
+	end
+
+	-- 移动速度
+	if Fu_Ling_Sik_3 == 0 then
+		humanoid.WalkSpeed = Player_movement_speed_value
+	else
+		humanoid.WalkSpeed = originalWalkSpeed
+	end
+end
+
+-- 初始加载
+onCharacterAdded(character)
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- 显示欢迎弹窗
+player:WaitForChild("PlayerGui")
 game.StarterGui:SetCore("SendNotification", {
 	Title = "歡迎使用",
 	Text = "作者 快手號:4708518336",
-	Duration = 5 -- 弹窗显示时间（秒），可不写，默认自动消失
+	Duration = 5
 })
 
--- 保留的Orionlib 框架結構（已修正錯誤）
+-- 加载 OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/refs/heads/main/scripting_framework.lua"))()
 
 local Window = OrionLib:MakeWindow({
-	IntroText = "宇宙", -- 加載動畫
-	Name = "宇宙" .. identifyexecutor(), -- 腳本名字
+	IntroText = "宇宙",
+	Name = "宇宙" .. (identifyexecutor and identifyexecutor() or ""),
 	HidePremium = false,
 	SaveConfig = true,
-	ConfigFolder = "OrionConfig_宇宙" -- 配置文件夾，避免保存錯誤
+	ConfigFolder = "OrionConfig_宇宙"
 })
 
--- 顯示Tab頁面
+-- 首页
 local Tab = Window:MakeTab({
 	Name = "首頁",
 	Icon = "rbxassetid://4458855809",
 	PremiumOnly = false
 })
 
---作者 快手號:4708518336
 Tab:AddButton({
-	Name = "作者 快手號:4708518336", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "作者 快手號:4708518336" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_simple"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
+	Name = "作者 快手號:4708518336",
+	Callback = function()
+		getgenv().XiaoPi = "作者 快手號:4708518336"
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_simple"))()
+	end
 })
 
--- 顯示Tab頁面
+-- 玩家
+local Tab = Window:MakeTab({
+	Name = "玩家",
+	Icon = "rbxassetid://4458855809",
+	PremiumOnly = false
+})
+
+Tab:AddToggle({
+	Name = "移動速度修改",
+	Default = false,
+	Callback = function()
+		getgenv().XiaoPi = "移動速度修改"
+		Fu_Ling_Sik_3 = 1 - Fu_Ling_Sik_3  -- 切换状态
+	end
+})
+
+local speeds = {16, 25, 50, 75, 100}
+for _, speed in ipairs(speeds) do
+	Tab:AddButton({
+		Name = "移動速度修改(" .. speed .. ")",
+		Callback = function()
+			getgenv().XiaoPi = "移動速度修改(" .. speed .. ")"
+			Player_movement_speed_value = speed
+			if Fu_Ling_Sik_3 == 0 then
+				humanoid.WalkSpeed = speed
+			end
+		end
+	})
+end
+
+Tab:AddToggle({
+	Name = "穿牆",
+	Default = false,
+	Callback = function()
+		getgenv().XiaoPi = "穿牆"
+		Fu_Ling_Sik_1 = 1 - Fu_Ling_Sik_1
+		if Fu_Ling_Sik_1 == 0 then
+			disableCollisions()
+		else
+			enableCollisions()
+		end
+	end
+})
+
+Tab:AddToggle({
+	Name = "特效",
+	Default = false,
+	Callback = function()
+		getgenv().XiaoPi = "特效"
+		Fu_Ling_Sik_2 = 1 - Fu_Ling_Sik_2
+		if Fu_Ling_Sik_2 == 0 then
+			addColoredFiresToCharacter(character)
+		else
+			removeAllColoredFires(character)
+		end
+	end
+})
+
+local colors = {
+	{"藍色", Color3.new(0, 0, 1)},
+	{"黃色", Color3.new(1, 1, 0)},
+	{"白色", Color3.new(1, 1, 1)},
+	{"血黑色", Color3.new(0.1, 0, 0)}
+}
+
+for _, colorInfo in ipairs(colors) do
+	local name, color = colorInfo[1], colorInfo[2]
+	Tab:AddButton({
+		Name = "改變特效顏色(" .. name .. ")",
+		Callback = function()
+			getgenv().XiaoPi = "改變特效顏色(" .. name .. ")"
+			Special_effects_colors = color
+			if Fu_Ling_Sik_2 == 0 then
+				addColoredFiresToCharacter(character)
+			end
+		end
+	})
+end
+
+-- 功能
 local Tab = Window:MakeTab({
 	Name = "功能",
 	Icon = "rbxassetid://7733779610",
 	PremiumOnly = false
 })
 
--- 修正後的按鈕代碼
-Tab:AddButton({
-	Name = "飛行", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "飛行" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_flight"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+local function addFunctionButton(tab, name, url)
+	tab:AddButton({
+		Name = name,
+		Callback = function()
+			getgenv().XiaoPi = name
+			loadstring(game:HttpGet(url))()
+		end
+	})
+end
 
---自動旋轉
-Tab:AddButton({
-	Name = "自動旋轉", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "自動旋轉" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_auto-rotation"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+addFunctionButton(Tab, "飛行", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_flight")
+addFunctionButton(Tab, "自動旋轉", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_auto-rotation")
+addFunctionButton(Tab, "飛行(超人動畫)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_superman_flight")
+addFunctionButton(Tab, "甩飛腳本(肘擊)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_throw_away")
 
---飛行(超人動畫)
-Tab:AddButton({
-	Name = "飛行(超人動畫)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "飛行(超人動畫)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_superman_flight"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---甩飛腳本
-Tab:AddButton({
-	Name = "甩飛腳本(肘擊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "甩飛腳本（肘擊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_throw_away"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
--- 顯示Tab頁面
+-- 武器獲得
 local Tab = Window:MakeTab({
 	Name = "武器獲得",
 	Icon = "rbxassetid://7825183411",
 	PremiumOnly = false
 })
 
---獲得點擊傳送工具
-Tab:AddButton({
-	Name = "傳送工具", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "傳送工具" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+addFunctionButton(Tab, "傳送工具", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/scrript_click-to-deliver")
+addFunctionButton(Tab, "破壞之錘(可以破壞地圖的方塊)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction")
+addFunctionButton(Tab, "火箭筒", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_bazooka")
 
---破壞之錘
-Tab:AddButton({
-	Name = "破壞之錘(可以破壞地圖的方塊)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "破壞之錘(可以破壞地圖的方塊)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_hammer_destruction"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---火箭筒
-Tab:AddButton({
-	Name = "火箭筒", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "火箭筒" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_bazooka"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
--- 顯示Tab頁面
+-- 擴展菜單
 local Tab = Window:MakeTab({
 	Name = "擴展菜單",
 	Icon = "rbxassetid://133104953772161",
 	PremiumOnly = false
 })
 
---dex腳本
-Tab:AddButton({
-	Name = "dex(修改器)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "dex(修改器)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+addFunctionButton(Tab, "dex(修改器)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_dex")
+addFunctionButton(Tab, "動作跳舞菜單(R15)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_action_menu")
+addFunctionButton(Tab, "透視菜單", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP")
+addFunctionButton(Tab, "物體控制菜單", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_controlled_items")
+addFunctionButton(Tab, "地圖貼圖修改", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_map_change")
 
---動作
-Tab:AddButton({
-	Name = "動作跳舞菜單(R15)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "動作跳舞菜單(R15)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		lloadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_action_menu"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---透視菜單
-Tab:AddButton({
-	Name = "透視菜單", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "透視菜單" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_EFP"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---物體控制菜單
-Tab:AddButton({
-	Name = "物體控制菜單", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "物體控制菜單" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_controlled_items"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---地圖修改
-Tab:AddButton({
-	Name = "地圖貼圖修改", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "地圖貼圖修改" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_map_change"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
--- 顯示Tab頁面
+-- 最強戰場
 local Tab = Window:MakeTab({
 	Name = "最強戰場",
 	Icon = "rbxassetid://111934201357670",
 	PremiumOnly = false
 })
 
---特效
-Tab:AddButton({
-	Name = "特效", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "特效" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI.lua"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+addFunctionButton(Tab, "特效", "https://raw.githubusercontent.com/IdkRandomUsernameok/PublicAssets/refs/heads/main/Releases/MUI/Mua")
+addFunctionButton(Tab, "五条悟(最強英雄)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_gojo_satoru_all.lua")
+addFunctionButton(Tab, "五条悟2(最強英雄)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/refs/heads/main/script_gojo_satoru_2.lua")
+addFunctionButton(Tab, "火車頭(英雄獵人)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua")
 
---最強英雄
-Tab:AddButton({
-	Name = "五条悟(最強英雄)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "五条悟(最強英雄)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_gojo_satoru_all.lua"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---最強英雄(2)
-Tab:AddButton({
-	Name = "五条悟2(最強英雄)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "五条悟2(最強英雄)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/refs/heads/main/script_gojo_satoru_2.lua",true))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
---英雄獵人
-Tab:AddButton({
-	Name = "火車頭(英雄獵人)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "火車頭(英雄獵人)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷）
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_the_flash_all.lua"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
-
--- 顯示Tab頁面
+-- 偷走一顆腦紅
 local Tab = Window:MakeTab({
 	Name = "偷走一顆腦紅",
 	Icon = "rbxassetid://111934201357670",
 	PremiumOnly = false
 })
 
---選擇1
-Tab:AddButton({
-	Name = "菜單(修改)", -- 按鈕名稱（可根據需求修改，如"啟動飛行"）
-	Callback = function() -- 修正：補充函數括號()，函數體需用end閉合
-		getgenv().XiaoPi = "火車頭(英雄獵人)" -- 修正：補充賦值語句的等號右側內容（原代碼語法中斷)
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_Property_modification_menu"))() -- 修正：移除多餘引號，確保鏈接完整
-	end -- 修正：補充end閉合Callback函數
-})
+addFunctionButton(Tab, "菜單(修改)", "https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_Property_modification_menu")
+
+-- 移动速度循环更新
+while true do
+	wait(0.1)
+	if character and humanoid and humanoid.Health > 0 then
+		if Fu_Ling_Sik_3 == 0 then
+			humanoid.WalkSpeed = Player_movement_speed_value
+		else
+			humanoid.WalkSpeed = originalWalkSpeed
+		end
+	end
+end

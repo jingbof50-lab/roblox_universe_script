@@ -38,7 +38,7 @@ local function enableCollisions()
 end
 
 -- 特效功能
-local FIRE_SIZE = 5
+local FIRE_SIZE = 3.5
 
 local function addColoredFire(part, color)
 	if part:FindFirstChild("ColoredFire") then

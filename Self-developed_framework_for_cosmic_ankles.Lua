@@ -142,14 +142,14 @@ local function Functionenter(Name,text,script)
 	UICorner.Parent = TextBox
 	UICorner.CornerRadius = UDim.new(0, 15)
 
-	Function_yOffset = Function_yOffset + TextBox.TextBounds.Y + Function_buttonGap
+	Function_yOffset = Function_yOffset + TextBox.TextBounds.Y + Function_buttonGap + 35
 
 	TextBox:GetPropertyChangedSignal("Text"):Connect(function()
 		script(TextBox.Text)
 	end)
 end
 --功能開關
-local function FunctionSwitch(Name,text,callback)
+local function FunctionSwitch(Name,text,script)
 
 	local TextButton = Instance.new("TextButton")
 	TextButton.Parent = Function_ScrollingFrame
@@ -182,13 +182,13 @@ local function FunctionSwitch(Name,text,callback)
 	TextButton.MouseButton1Click:Connect(function()
 		yesorno = not yesorno
 		SwitchFrame.BackgroundColor3 = yesorno and Textcolor or backgroundcolor
-		if callback then
+		if script then
 
 		end
 		script(yesorno) 
 	end)
 
-	Function_yOffset = TextButton.Size.Y.Offset + Function_buttonGap + 74
+	Function_yOffset = TextButton.Size.Y.Offset + Function_buttonGap + 110
 end
 --隱藏顯示
 local UserInputService = game:GetService("UserInputService")
@@ -205,9 +205,81 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 	end
 end)
 
+--获取本地玩家
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+--變量
+local run = humanoid.WalkSpeed
+local Jump = humanoid.JumpHeight
+local hipheight = humanoid.HipHeight
+local locking_run = false
+local locking_Jump = false
+
 typeButton("首頁","首頁",function()
 	Clearfunction()
 	FunctionButton("作者","快手號:4708518336")
+end)
+typeButton("角色","角色",function()
+	Clearfunction()
+	FunctionButton("重置人物","重置人物",function()
+		humanoid.Health = 0
+	end)
+	Functionenter("移動速度修改","移動速度"..run,function(txt)
+		run = txt
+	end)
+	FunctionButton("確定修改移動速度","確定修改移動速度",function()
+		--获取本地玩家
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		--修改
+		humanoid.WalkSpeed = run
+	end)
+	FunctionSwitch("鎖定移動速度","鎖定移動速度",function(yesorno)
+		locking_run = yesorno
+	end)
+	Function_yOffset = Function_yOffset + 55
+	Functionenter("跳高度修改","跳高度"..Jump,function(txt)
+		Jump = txt
+	end)
+	FunctionButton("確定跳高度修改","確定跳高度修改",function()
+		--获取本地玩家
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		--修改
+		humanoid.JumpHeight = Jump
+	end)
+	FunctionSwitch("鎖定跳高度","鎖定跳高度",function(yesorno)
+		locking_Jump = yesorno
+	end)
+	Function_yOffset = Function_yOffset + 165 +55
+	Functionenter("身體高度修改","身體高度"..hipheight,function(txt)
+		hipheight = txt
+	end)
+	FunctionButton("確定身體高度修改","確定身體高度修改",function()
+		--获取本地玩家
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		--修改
+		humanoid.HipHeight = hipheight
+	end)
+	FunctionButton("站","站",function()
+		humanoid.Sit = false
+		humanoid.PlatformStand = false
+	end)
+	FunctionButton("坐下","坐下",function()
+		humanoid.Sit = true
+	end)
+	FunctionButton("倒下","倒下",function()
+		humanoid.PlatformStand = true
+	end)
 end)
 typeButton("功能","功能",function()
 	Clearfunction()
@@ -275,3 +347,26 @@ typeButton("偷走一顆腦紅","偷走一顆腦紅",function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/jingbof50-lab/roblox_universe_script/main/script_Property_modification_menu"))() 
 	end)
 end)
+
+while true do
+	wait(0.01)
+	if locking_run == true then
+		--获取本地玩家
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		--修改
+		humanoid.WalkSpeed = run
+	end
+	if locking_Jump == true then
+		--获取本地玩家
+		local Players = game:GetService("Players")
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		--修改
+		humanoid.JumpHeight = Jump
+	end
+end
+
